@@ -1,12 +1,12 @@
-# memo.wz Contributing Guide
+# chord.wz Contributing Guide
 
-Welcome to the memo.wz contributing guide, and thank you for your interest.
+Welcome to the chord.wz contributing guide, and thank you for your interest.
 
 We accept the following types of contributions:
 
-- **Source code** — bug fixes, new features, and improvements to the cache,
-  hash, or state modules. See [Environment setup](#environment-setup), [Best
-  practices](#best-practices), and [Contribution workflow](#contribution-workflow).
+- **Source code** — bug fixes, new features, and improvements to key notation,
+  key tables, overrides, or hint rendering. See [Environment setup](#environment-setup),
+  [Best practices](#best-practices), and [Contribution workflow](#contribution-workflow).
 - **Documentation** — improvements to the README, inline LuaLS annotations, or
   issue templates. See [Text formats](#text-formats).
 - **Bug reports** — reproducible issues filed through the [bug report
@@ -20,11 +20,10 @@ At this time, we do not accept:
 
 ## Overview
 
-memo.wz is a memoization, caching, and persistent state library for
-[WezTerm](https://wezfurlong.org/wezterm/) plugins and configuration code. It
-provides a session-scoped cache backed by `wezterm.GLOBAL`, file-persistent
-key/value stores, and XXH3-64 hashing utilities. See the
-[README](readme.md) for full usage details.
+chord.wz provides Vim-style key notation, key table helpers, user overrides,
+and paginated key-hint rendering for
+[WezTerm](https://wezfurlong.org/wezterm/) configuration code. See the
+[README](readme.md) for usage details.
 
 ## Ground rules
 
@@ -36,7 +35,7 @@ expectations.
 
 To propose a new idea:
 
-1. Check existing [issues](https://github.com/sravioli/memo.wz/issues) to avoid
+1. Check existing [issues](https://github.com/sravioli/chord.wz/issues) to avoid
    duplicates.
 2. Open a new issue describing the idea, its motivation, and, if applicable, a
    rough implementation approach.
@@ -59,15 +58,15 @@ Before contributing, ensure you have the following:
 2. Clone your fork:
 
    ```sh
-   git clone https://github.com/<your-username>/memo.wz.git
-   cd memo.wz
+   git clone https://github.com/<your-username>/chord.wz.git
+   cd chord.wz
    ```
 
 3. To test the plugin locally, point your WezTerm config at the checkout:
 
    ```lua
-   local memo = wezterm.plugin.require(
-     "file:///" .. wezterm.config_dir .. "/plugins/memo.wz"
+   local chord = wezterm.plugin.require(
+     "file:///" .. wezterm.config_dir .. "/plugins/chord.wz"
    )
    ```
 
@@ -104,7 +103,7 @@ Workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/)
 ### Report issues and bugs
 
 Use the [bug report template](ISSUE_TEMPLATE/bug_report.md) to file issues.
-Include your OS, WezTerm version, memo.wz version or commit, relevant
+Include your OS, WezTerm version, chord.wz version or commit, relevant
 configuration code, and steps to reproduce the bug.
 
 ### Commit messages
@@ -132,8 +131,8 @@ format:
 Examples:
 
 ```text
-fix(cache): handle nil TTL in compute()
-feat(state): add async background writes
+fix(keys): preserve native wezterm entries
+feat(hints): add configurable separator
 docs: update README usage section
 chore: bump stylua config
 ```
@@ -152,7 +151,7 @@ Use the commit type as the branch prefix (e.g. `fix/`, `feat/`, `docs/`).
 
 1. Push your branch to your fork.
 2. Open a pull request against `main` on
-   [sravioli/memo.wz](https://github.com/sravioli/memo.wz).
+   [sravioli/chord.wz](https://github.com/sravioli/chord.wz).
 3. Fill in a description of the changes and reference any related issues.
 4. Ensure StyLua formatting passes (`stylua --check plugin/`).
 5. Ensure tests pass (`busted --verbose`).
