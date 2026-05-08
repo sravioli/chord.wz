@@ -29,9 +29,9 @@ local chord = wezterm.plugin.require("file:///" .. wezterm.config_dir .. "/plugi
 
 ### Type annotations
 
-The plugin includes LuaCATS annotations. After installing
+Chord ships LuaCATS annotations. After installing
 [wezterm-types](https://github.com/DrKJeff16/wezterm-types), annotate the import
-to get autocompletion and type checking:
+to get completion and type checking:
 
 ```lua
 ---@type Chord
@@ -96,7 +96,7 @@ chord.maps(config, {
 Use `chord.key(lhs_or_spec, action?, desc?)` when you need a single normalized
 entry, and `chord.table(mappings)` when you need a standalone key table.
 
-## Key Tables
+## Key tables
 
 `chord.tables(config, defs)` registers modal key tables and keeps their metadata
 available for status bars or prompts.
@@ -211,3 +211,9 @@ luacheck .
 stylua --check .
 selene --display-style=quiet plugin/chord/*.lua plugin/init.lua
 ```
+
+## License
+
+Code is licensed under the [GNU General Public License v2](../LICENSE).
+Documentation is licensed under
+[Creative Commons Attribution-NonCommercial 4.0 International](../LICENSE-DOCS).
