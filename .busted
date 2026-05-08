@@ -1,0 +1,11 @@
+return {
+  _all = {
+    coverage = true,
+    lpath = "plugin/?.lua;plugin/?/init.lua;./?.lua;./?/init.lua",
+  },
+  default = {
+    verbose = true,
+    output = "utfTerminal",
+    helper = "spec/mocks/wezterm.lua",
+  },
+}
