@@ -1,6 +1,6 @@
 # chord.wz
 
-[![Awesome](https://awesome.re/mentioned-badge.svg)](https://github.com/michaelbrusegard/awesome-wezterm)
+<!-- [![Awesome](https://awesome.re/mentioned-badge.svg)](https://github.com/michaelbrusegard/awesome-wezterm) -->
 [![Tests](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/tests.yaml?label=Tests&logo=Lua)](https://github.com/sravioli/chord.wz/actions?workflow=tests)
 [![Lint](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/lint.yaml?label=Lint&logo=Lua)](https://github.com/sravioli/chord.wz/actions?workflow=lint)
 [![Coverage](https://img.shields.io/coverallsCoverage/github/sravioli/chord.wz?label=Coverage&logo=coveralls)](https://coveralls.io/github/sravioli/chord.wz)
@@ -27,6 +27,7 @@ local chord = wezterm.plugin.require "https://github.com/sravioli/chord.wz"
 local chord = wezterm.plugin.require("file:///" .. wezterm.config_dir .. "/plugins/chord.wz")
 ```
 
+<!--
 ### Type annotations
 
 Chord ships LuaCATS annotations. After installing
@@ -37,6 +38,7 @@ to get completion and type checking:
 ---@type Chord
 local chord = wezterm.plugin.require "https://github.com/sravioli/chord.wz"
 ```
+-->
 
 ## Setup
 
