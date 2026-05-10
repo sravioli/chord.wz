@@ -60,6 +60,11 @@ chord.setup {
   hints = {
     separator = " / ",
   },
+  command = {
+    key = "<leader><Space>",
+    title = "Commands",
+    include_defaults = false,
+  },
 }
 ```
 
@@ -159,6 +164,39 @@ Add `hint_action()` bindings to page through long hint bars:
 { "<C-S-A-Right>", chord.hint_action(nil, 1), "" },
 ```
 
+## Command picker
+
+Chord can open a searchable command picker for your keybindings. It discovers
+described entries from `config.keys` and `config.key_tables`, plus commands you
+register explicitly.
+
+```lua
+chord.command.register {
+  id = "ssh-prod",
+  label = "SSH: production",
+  action = act.SpawnCommandInNewTab { args = { "ssh", "prod" } },
+}
+
+chord.command.apply(config, {
+  key = "<leader><Space>",
+  title = "Commands",
+})
+```
+
+Call `chord.command.apply(config, opts)` after your keys and key tables are in
+place. The picker snapshots the config when it opens, so entries added later are
+still visible as long as they are present in the same config table.
+
+By default, Chord shows only entries with descriptions. Enable undocumented
+entries or WezTerm defaults when you want a broader, noisier picker:
+
+```lua
+chord.command.apply(config, {
+  include_undocumented = true,
+  include_defaults = true,
+})
+```
+
 ## Overrides
 
 `apply_overrides()` is useful when your configuration has a user override layer.
@@ -204,6 +242,12 @@ chord.apply_overrides(config, {
 | `hint(config, name, width, win)`  | Render plain fixed-width hints.                  |
 | `hint_layout(...)`                | Render styled hints as a Ribbon instance.        |
 | `hint_action(name, direction)`    | Return an action callback for hint pagination.   |
+| `command.register(spec)`          | Register an action-only or key-backed command.   |
+| `command.register_many(specs)`    | Register multiple commands.                      |
+| `command.collect(config, opts?)`  | Collect commands from config and registrations.  |
+| `command.action(config, opts?)`   | Return an action that opens the command picker.  |
+| `command.apply(config, opts?)`    | Add a trigger binding for the command picker.    |
+| `command.clear()`                 | Clear explicitly registered commands.            |
 
 ## Development
 
