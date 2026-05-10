@@ -2,6 +2,7 @@ local wezterm = {}
 
 wezterm.GLOBAL = {}
 wezterm._logs = {}
+wezterm._default_keys = {}
 
 local memo_store = {}
 local memo = {
@@ -92,6 +93,25 @@ function wezterm.action_callback(fn)
     __type = "action_callback",
     callback = fn,
   }
+end
+
+wezterm.action = {
+  InputSelector = function(args)
+    return {
+      type = "InputSelector",
+      args = args,
+    }
+  end,
+}
+
+wezterm.gui = {
+  default_keys = function()
+    return wezterm._default_keys
+  end,
+}
+
+function wezterm._set_default_keys(keys)
+  wezterm._default_keys = keys or {}
 end
 
 function wezterm.log_error(message)
