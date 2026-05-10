@@ -7,11 +7,27 @@ local M = {}
 ---@field modifiers table<string, string>
 ---@field leader string
 ---@field hints Chord.HintsConfig
+---@field command Chord.CommandConfig
 ---@field log Chord.LogConfig
 
 ---@class Chord.HintsConfig
 ---@field separator string
 ---@field page_cache_prefix string
+
+---@class Chord.CommandConfig
+---@field key string
+---@field desc string
+---@field title string
+---@field fuzzy boolean
+---@field description string
+---@field fuzzy_description string
+---@field alphabet? string
+---@field include_registered boolean
+---@field include_keys boolean
+---@field include_key_tables boolean
+---@field include_defaults boolean
+---@field include_undocumented boolean
+---@field dedupe boolean
 
 ---@class Chord.LogConfig
 ---@field enabled boolean
@@ -23,6 +39,7 @@ local defaults = {
     BS = "Backspace",
     ESC = "Escape",
     Bar = "|",
+    Space = " ",
     Up = "UpArrow",
     Down = "DownArrow",
     Left = "LeftArrow",
@@ -65,6 +82,21 @@ local defaults = {
   hints = {
     separator = " / ",
     page_cache_prefix = "chord_hint_page",
+  },
+  command = {
+    key = "<leader><Space>",
+    desc = "command picker",
+    title = "Commands",
+    fuzzy = true,
+    description = "Select command.",
+    fuzzy_description = "Search",
+    alphabet = nil,
+    include_registered = true,
+    include_keys = true,
+    include_key_tables = true,
+    include_defaults = false,
+    include_undocumented = false,
+    dedupe = true,
   },
   log = {
     enabled = true,
