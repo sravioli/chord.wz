@@ -147,8 +147,9 @@ Chord can render a fixed-width hint string for the current key table:
 local text = chord.hint(config, "resize_mode", 80, window)
 ```
 
-For styled status bars, use `hint_layout()`. It returns a `ribbon.wz` instance,
-so callers that understand Ribbon can format it directly.
+For styled status bars, use `hint_layout()`. It returns a
+[`ribbon.wz`](https://github.com/sravioli/ribbon.wz) instance, so callers that
+understand Ribbon can format it directly.
 
 ```lua
 local hint = chord.hint_layout(config, active_mode, width, window, {
@@ -248,15 +249,6 @@ chord.apply_overrides(config, {
 | `command.action(config, opts?)`   | Return an action that opens the command picker.  |
 | `command.apply(config, opts?)`    | Add a trigger binding for the command picker.    |
 | `command.clear()`                 | Clear explicitly registered commands.            |
-
-## Development
-
-```sh
-busted --verbose
-luacheck .
-stylua --check .
-selene --display-style=quiet plugin/chord/*.lua plugin/init.lua
-```
 
 ## License
 
