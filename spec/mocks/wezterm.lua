@@ -98,6 +98,12 @@ function wezterm.action_callback(fn)
 end
 
 wezterm.action = {
+  ActivateKeyTable = function(args)
+    return {
+      type = "ActivateKeyTable",
+      args = args,
+    }
+  end,
   InputSelector = function(args)
     return {
       type = "InputSelector",

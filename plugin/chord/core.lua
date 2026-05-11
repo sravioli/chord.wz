@@ -594,6 +594,24 @@ function M.apply_overrides(config_table, overrides)
   return nil
 end
 
+---@param defs table<string, Chord.KeyTableDef|Chord.KeyTableDefFn>|Chord.Mode
+---@return table
+local function normalize_table_defs(defs)
+  if type(defs) == "table" and defs.__chord_mode then
+    return { [defs.name] = defs.def }
+  end
+
+  local out = {}
+  for name, def in pairs(defs or {}) do
+    if type(def) == "table" and def.__chord_mode then
+      out[def.name] = def.def
+    else
+      out[name] = def
+    end
+  end
+  return out
+end
+
 ---@param config_table table
 ---@param defs table<string, Chord.KeyTableDef|Chord.KeyTableDefFn>
 ---@return nil
@@ -603,13 +621,14 @@ function M.tables(config_table, defs)
     return nil
   end
 
-  M._defs = defs
+  local table_defs = normalize_table_defs(defs)
+  M._defs = table_defs
   clear_caches()
 
   local proxy = proxy_theme()
   config_table.key_tables = config_table.key_tables or {}
 
-  for name, def in pairs(defs) do
+  for name, def in pairs(table_defs) do
     local resolved = resolve_def(name, def, proxy)
     if resolved then
       if resolved.meta then
@@ -1110,6 +1129,55 @@ function M.conflicts(config_table, opts)
   end)
 
   return out
+end
+
+---@class Chord.Mode
+---@field __chord_mode boolean
+---@field name string
+---@field def Chord.KeyTableDef|Chord.KeyTableDefFn
+
+---@param name string
+---@param def Chord.KeyTableDef|Chord.KeyTableDefFn
+---@return Chord.Mode
+function M.mode(name, def)
+  local mode = {
+    __chord_mode = true,
+    name = name,
+    def = def,
+  }
+
+  ---@param lhs string|table
+  ---@param desc? string
+  ---@param opts? table
+  ---@return table|nil
+  function mode:activate(lhs, desc, opts)
+    opts = opts or {}
+    local resolved = type(self.def) == "table" and self.def or {}
+    local action_opts = {
+      name = self.name,
+      one_shot = opts.one_shot,
+    }
+
+    if action_opts.one_shot == nil then
+      action_opts.one_shot = resolved.one_shot
+    end
+    if action_opts.one_shot == nil then
+      action_opts.one_shot = false
+    end
+    if opts.replace_current ~= nil then
+      action_opts.replace_current = opts.replace_current
+    end
+    if opts.until_unknown ~= nil then
+      action_opts.until_unknown = opts.until_unknown
+    end
+    if opts.timeout_milliseconds ~= nil then
+      action_opts.timeout_milliseconds = opts.timeout_milliseconds
+    end
+
+    return M.key(lhs, wezterm.action.ActivateKeyTable(action_opts), desc)
+  end
+
+  return mode
 end
 
 local command_api
