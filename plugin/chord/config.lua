@@ -8,6 +8,7 @@ local M = {}
 ---@field leader string
 ---@field hints Chord.HintsConfig
 ---@field command Chord.CommandConfig
+---@field overlay Chord.OverlayConfig
 ---@field log Chord.LogConfig
 
 ---@class Chord.HintsConfig
@@ -42,6 +43,15 @@ local M = {}
 ---@field mode_fg? string
 ---@field mode_colors table<string, table>
 ---@field source_colors table<string, table>
+
+---@class Chord.OverlayConfig
+---@field key string
+---@field desc string
+---@field title string
+---@field fuzzy boolean
+---@field description string
+---@field fuzzy_description string
+---@field alphabet? string
 
 ---@class Chord.LogConfig
 ---@field enabled boolean
@@ -129,6 +139,15 @@ local defaults = {
         default = { fg = "#1a1b26", bg = "#e0af68" },
       },
     },
+  },
+  overlay = {
+    key = "<leader>?",
+    desc = "key help",
+    title = "Chord help",
+    fuzzy = true,
+    description = "Select command.",
+    fuzzy_description = "Search",
+    alphabet = nil,
   },
   log = {
     enabled = true,

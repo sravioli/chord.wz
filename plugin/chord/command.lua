@@ -259,7 +259,7 @@ local function command_from_entry(core, source, entry, opts, table_name)
   if type(entry) ~= "table" or entry.action == nil or entry.key == nil then
     return nil
   end
-  if entry.__chord_command_picker then
+  if entry.__chord_command_picker or entry.__chord_overlay then
     return nil
   end
 

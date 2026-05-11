@@ -1181,6 +1181,7 @@ function M.mode(name, def)
 end
 
 local command_api
+local overlay_api
 
 ---@param loader fun(): table
 ---@return table
@@ -1209,5 +1210,15 @@ function M.__command_api()
 end
 
 M.command = lazy_proxy(load_command)
+
+---@return table
+local function load_overlay()
+  if not overlay_api then
+    overlay_api = require "chord.overlay"(M, load_command())
+  end
+  return overlay_api
+end
+
+M.overlay = lazy_proxy(load_overlay)
 
 return M
