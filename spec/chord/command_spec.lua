@@ -287,4 +287,22 @@ describe("chord command picker", function()
     assert.equal("[keys] a  alpha", selector.args.choices[1].label)
     assert.equal(1, #wezterm._format_calls)
   end)
+
+  it("generates command palette entries", function()
+    local config = {}
+    chord.maps(config, {
+      { "a", "alpha-action", "alpha" },
+    })
+
+    local entries = chord.command.palette(config, {
+      prefix = "Chord: ",
+      include_lhs = true,
+      icon = "md_keyboard",
+    })
+
+    assert.equal(1, #entries)
+    assert.equal("Chord: a alpha", entries[1].brief)
+    assert.equal("alpha-action", entries[1].action)
+    assert.equal("md_keyboard", entries[1].icon)
+  end)
 end)

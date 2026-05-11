@@ -525,5 +525,35 @@ return function(core)
     return action
   end
 
+  ---Generate WezTerm augment-command-palette entries from Chord commands.
+  ---@param config_table table
+  ---@param opts? table
+  ---@return table[]
+  function command.palette(config_table, opts)
+    local options = command_options(opts)
+    local commands = command.collect(config_table, options)
+    local prefix = options.prefix == nil and "Chord: " or tostring(options.prefix)
+    local include_lhs = options.include_lhs ~= false
+    local entries = {}
+
+    for _, cmd in ipairs(commands) do
+      local label = cmd.label
+      if include_lhs and cmd.lhs and cmd.lhs ~= "" then
+        label = cmd.lhs .. " " .. label
+      end
+
+      local entry = {
+        brief = prefix .. label,
+        action = cmd.action,
+      }
+      if options.icon ~= nil then
+        entry.icon = options.icon
+      end
+      entries[#entries + 1] = entry
+    end
+
+    return entries
+  end
+
   return command
 end
