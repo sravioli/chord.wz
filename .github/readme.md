@@ -5,15 +5,17 @@
 [![Lint](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/lint.yaml?label=Lint&logo=Lua)](https://github.com/sravioli/chord.wz/actions?workflow=lint)
 [![Coverage](https://img.shields.io/coverallsCoverage/github/sravioli/chord.wz?label=Coverage&logo=coveralls)](https://coveralls.io/github/sravioli/chord.wz)
 
-Vim-style key notation, key tables, and hint bars for
-[WezTerm](https://wezfurlong.org/wezterm/).
+Chord lets you write WezTerm bindings with Vim-style notation while still
+accepting native key tables. It also keeps mode metadata next to the mappings,
+so the same definitions can drive hint bars, command pickers, overlays, and user
+overrides.
 
-- Declare bindings with compact strings such as `<C-S-v>` and `<leader>p`
-- Mix Vim-style entries with native WezTerm keymap tables
-- Register modal key tables with display metadata
-- Render paginated key-hint bars for active modes
-- Apply user overrides for keys and key tables
-- Use configurable aliases, modifiers, leader notation, and hint separators
+- Write bindings with compact strings such as `<C-S-v>` and `<leader>p`
+- Mix Chord entries with native WezTerm keymap tables
+- Define modal key tables with labels, icons, and colors
+- Render paginated hints for active key tables
+- Build command pickers and help overlays from described bindings
+- Layer user overrides without rebuilding the whole config
 
 ## Installation
 
@@ -27,19 +29,19 @@ local chord = wezterm.plugin.require "https://github.com/sravioli/chord.wz"
 local chord = wezterm.plugin.require("file:///" .. wezterm.config_dir .. "/plugins/chord.wz")
 ```
 
-Chord loads one plugin dependency automatically:
+Chord loads one dependency automatically:
 
 - [`memo.wz`](https://github.com/sravioli/memo.wz) for hint pagination state
 
-Chord can also use optional plugin dependencies when their features need them:
+Chord can use these optional dependencies when a feature needs them:
 
 - [`log.wz`](https://github.com/sravioli/log.wz) for tagged internal logging
 - [`ribbon.wz`](https://github.com/sravioli/ribbon.wz) for `hint_layout()` and
   command picker labels when `formatter = "ribbon"`
 
-If an optional plugin is unavailable, Chord falls back where possible:
-`log.wz` falls back to WezTerm's native `wezterm.log_*` functions, and command
-picker labels fall back to `wezterm.format`.
+If an optional dependency is missing, Chord falls back where it can. Logging uses
+WezTerm's native `wezterm.log_*` functions, and command picker labels use
+`wezterm.format`.
 
 <!--
 ### Type annotations
@@ -82,12 +84,13 @@ chord.setup {
 }
 ```
 
-`setup()` is optional. Defaults are ready for the usual Vim-style notation.
+`setup()` is optional. The defaults already cover the usual Vim-style notation.
 
 ## Keymaps
 
 `chord.maps(config, mappings)` appends normalized entries to `config.keys`.
-Each item can be Vim-style, native WezTerm-style, or a named Lua table.
+Each item can be a compact Chord tuple, a native WezTerm entry, or a named Lua
+table.
 
 ```lua
 local act = wezterm.action
@@ -114,13 +117,13 @@ chord.maps(config, {
 })
 ```
 
-Use `chord.key(lhs_or_spec, action?, desc?)` when you need a single normalized
-entry, and `chord.table(mappings)` when you need a standalone key table.
+Use `chord.key(lhs_or_spec, action?, desc?)` for one normalized entry. Use
+`chord.table(mappings)` when you need a standalone key table.
 
 ## Key tables
 
-`chord.tables(config, defs)` registers modal key tables and keeps their metadata
-available for status bars or prompts.
+`chord.tables(config, defs)` registers modal key tables and stores their
+metadata for status bars, prompts, and command pickers.
 
 ```lua
 chord.tables(config, {
@@ -137,8 +140,8 @@ chord.tables(config, {
 })
 ```
 
-Definitions can also be functions. Chord passes the active theme to them when
-metadata is requested:
+Definitions can also be functions. When Chord needs metadata, it passes the
+active theme to the function:
 
 ```lua
 chord.tables(config, {
@@ -153,8 +156,8 @@ chord.tables(config, {
 })
 ```
 
-Use `chord.mode()` when you want the key-table definition and activation
-binding to stay together:
+Use `chord.mode()` when the key-table definition and its activation binding
+should stay together:
 
 ```lua
 local resize = chord.mode("resize_mode", {
@@ -179,8 +182,8 @@ local text = chord.hint(config, "resize_mode", 80, window)
 ```
 
 For styled status bars, use `hint_layout()`. It returns a
-[`ribbon.wz`](https://github.com/sravioli/ribbon.wz) instance, so callers that
-understand Ribbon can format it directly.
+[`ribbon.wz`](https://github.com/sravioli/ribbon.wz) instance, so callers can
+format it directly.
 
 ```lua
 local hint = chord.hint_layout(config, active_mode, width, window, {
@@ -198,7 +201,7 @@ Add `hint_action()` bindings to page through long hint bars:
 
 ## Command picker
 
-Chord can open a searchable command picker for your keybindings. It discovers
+Chord can open a searchable picker backed by your keybindings. It discovers
 described entries from `config.keys` and `config.key_tables`, plus commands you
 register explicitly.
 
@@ -216,11 +219,11 @@ chord.command.apply(config, {
 ```
 
 Call `chord.command.apply(config, opts)` after your keys and key tables are in
-place. The picker snapshots the config when it opens, so entries added later are
-still visible as long as they are present in the same config table.
+place. The picker reads the config when it opens, so later entries still appear
+as long as they are in the same config table.
 
 By default, Chord shows only entries with descriptions. Enable undocumented
-entries or WezTerm defaults when you want a broader, noisier picker:
+entries or WezTerm defaults when you want a broader picker:
 
 ```lua
 chord.command.apply(config, {
@@ -242,8 +245,8 @@ Sources are `registered`, `keys`, `key_table`, and `default`. Chord also accepts
 `global` for `keys`, `tables` or `key_tables` for `key_table`, and `defaults`
 for `default`.
 
-Enable styled labels when you want picker rows to show mode or source context.
-Plain labels remain the default.
+Enable styled labels when picker rows should show mode or source context. Plain
+labels remain the default.
 
 ```lua
 chord.command.apply(config, {
@@ -261,7 +264,7 @@ chord.command.apply(config, {
 
 `formatter = "wezterm"` uses `wezterm.format` directly. `formatter = "ribbon"`
 uses `ribbon.wz` when available and falls back to `wezterm.format` with a
-warning when it is not.
+warning when Ribbon is not installed.
 
 Generate command-palette entries from the same command metadata:
 
@@ -274,7 +277,7 @@ wezterm.on("augment-command-palette", function()
 end)
 ```
 
-Chord returns entries only; it does not register WezTerm events for you.
+Chord returns entries only. It does not register WezTerm events for you.
 
 ## Help overlay
 
@@ -289,13 +292,13 @@ chord.overlay.apply(config, {
 })
 ```
 
-The first overlay implementation uses WezTerm's `InputSelector` and groups rows
-by global keys, registered commands, defaults, or key-table name.
+The overlay uses WezTerm's `InputSelector` and groups rows by global keys,
+registered commands, defaults, or key-table name.
 
 ## Overrides
 
-`apply_overrides()` is useful when your configuration has a user override layer.
-It can disable, override, and add mappings without rebuilding the whole config.
+`apply_overrides()` fits configs with a user override layer. It can disable,
+replace, and add mappings without rebuilding the whole config.
 
 ```lua
 chord.apply_overrides(config, {
@@ -330,8 +333,8 @@ for _, conflict in ipairs(conflicts) do
 end
 ```
 
-Conflicts are grouped by scope, key, and modifiers. Global keys and each key
-table are checked independently.
+Conflicts are grouped by scope, key, and modifiers. Chord checks global keys and
+each key table independently.
 
 ## API
 
