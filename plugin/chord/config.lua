@@ -151,7 +151,7 @@ local defaults = {
     title = "Commands",
     fuzzy = true,
     description = "Select command.",
-    fuzzy_description = "Search",
+    fuzzy_description = "Search: ",
     alphabet = nil,
     include_registered = true,
     include_keys = true,
@@ -184,7 +184,7 @@ local defaults = {
     title = "Chord help",
     fuzzy = true,
     description = "Select command.",
-    fuzzy_description = "Search",
+    fuzzy_description = "Search: ",
     alphabet = nil,
   },
   log = {

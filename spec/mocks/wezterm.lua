@@ -35,10 +35,26 @@ function Ribbon:append(bg, fg, text, attributes)
   return self
 end
 
+function Ribbon:append_items(items)
+  if type(items) ~= "table" or #items == 0 then
+    self.items[#self.items + 1] = items
+    return self
+  end
+
+  for _, item in ipairs(items) do
+    self.items[#self.items + 1] = item
+  end
+  return self
+end
+
 function Ribbon:format()
   local out = {}
   for _, item in ipairs(self.items) do
-    out[#out + 1] = item.text
+    if type(item) == "table" and item.Text then
+      out[#out + 1] = item.Text
+    elseif type(item) == "table" and item.text then
+      out[#out + 1] = item.text
+    end
   end
   return table.concat(out)
 end

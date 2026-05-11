@@ -119,12 +119,8 @@ end
 ---@param badge string|nil
 ---@param label string
 ---@param color table|nil
----@return string
-local function format_with_wezterm(badge, label, color)
-  if type(wezterm.format) ~= "function" then
-    return decorated_text(badge, label)
-  end
-
+---@return table
+local function format_items(badge, label, color)
   local items = {}
   if badge and badge ~= "" then
     if color and color.fg then
@@ -135,11 +131,24 @@ local function format_with_wezterm(badge, label, color)
     end
     items[#items + 1] = { Attribute = { Intensity = "Bold" } }
     items[#items + 1] = { Text = "[" .. badge .. "]" }
-    items[#items + 1] = { Attribute = { Intensity = "Normal" } }
+    items[#items + 1] = "ResetAttributes"
     items[#items + 1] = { Text = " " }
   end
 
   items[#items + 1] = { Text = label }
+  return items
+end
+
+---@param badge string|nil
+---@param label string
+---@param color table|nil
+---@return string
+local function format_with_wezterm(badge, label, color)
+  if type(wezterm.format) ~= "function" then
+    return decorated_text(badge, label)
+  end
+
+  local items = format_items(badge, label, color)
   return wezterm.format(items)
 end
 
@@ -161,12 +170,11 @@ local function format_with_ribbon(badge, label, color)
   end
 
   local ok, rendered = pcall(function()
-    local layout = ribbon:new("CommandChoice", true)
-    if badge and badge ~= "" then
-      layout:append(color and color.bg or "", color and color.fg or "", "[" .. badge .. "]", "Bold")
-      layout:append("", "", " ", "Normal")
+    local layout = ribbon:new("CommandChoice", false)
+    if type(layout.append_items) ~= "function" then
+      return format_with_wezterm(badge, label, color)
     end
-    layout:append("", "", label, "Normal")
+    layout:append_items(format_items(badge, label, color))
     return layout:format()
   end)
 

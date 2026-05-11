@@ -310,6 +310,7 @@ describe("chord command picker", function()
     local selector = calls[1].action
     assert.equal("[mode] a  alpha", selector.args.choices[1].label)
     assert.equal(1, #wezterm._format_calls)
+    assert.equal("ResetAttributes", wezterm._format_calls[1][5])
   end)
 
   it("ignores unresolved mode proxy colors when styling picker labels", function()
