@@ -27,6 +27,15 @@ local function new_window()
   return win, {}, calls
 end
 
+local function has_log(pattern)
+  for _, item in ipairs(wezterm._logs or {}) do
+    if tostring(item.message):find(pattern, 1, true) then
+      return true
+    end
+  end
+  return false
+end
+
 describe("chord command picker", function()
   before_each(reset)
 
@@ -227,6 +236,52 @@ describe("chord command picker", function()
     assert.equal("beta", commands[1].table_name)
   end)
 
+  it("accepts map-style table filters", function()
+    local config = {}
+    chord.tables(config, {
+      alpha = {
+        meta = { i = "A", txt = "ALPHA", bg = "#111111" },
+        keys = {
+          { "a", "alpha-action", "alpha" },
+        },
+      },
+      beta = {
+        meta = { i = "B", txt = "BETA", bg = "#222222" },
+        keys = {
+          { "b", "beta-action", "beta" },
+        },
+      },
+    })
+
+    local commands = chord.command.collect(config, {
+      sources = { key_tables = true },
+      tables = { alpha = true, beta = true },
+      exclude_tables = { beta = true },
+    })
+
+    assert.equal(1, #commands)
+    assert.equal("alpha", commands[1].table_name)
+  end)
+
+  it("warns and ignores invalid source names", function()
+    chord.setup {
+      log = { enabled = true, threshold = "warn" },
+    }
+
+    local config = {}
+    chord.maps(config, {
+      { "a", "alpha-action", "alpha" },
+    })
+
+    local commands = chord.command.collect(config, {
+      sources = { "unknown", "keys" },
+    })
+
+    assert.equal(1, #commands)
+    assert.equal("alpha", commands[1].label)
+    assert.is_true(has_log "invalid source 'unknown' ignored")
+  end)
+
   it("builds styled picker labels with wezterm.format", function()
     local config = {}
     chord.tables(config, {
@@ -286,6 +341,83 @@ describe("chord command picker", function()
     local selector = calls[1].action
     assert.equal("[keys] a  alpha", selector.args.choices[1].label)
     assert.equal(1, #wezterm._format_calls)
+  end)
+
+  it("warns and uses decorated text for unknown style formatters", function()
+    chord.setup {
+      log = { enabled = true, threshold = "warn" },
+    }
+
+    local config = {}
+    chord.maps(config, {
+      { "a", "alpha-action", "alpha" },
+    })
+
+    local action = chord.command.action(config, {
+      style = {
+        enabled = true,
+        formatter = "unknown",
+      },
+    })
+    local win, pane, calls = new_window()
+
+    action.callback(win, pane)
+
+    local selector = calls[1].action
+    assert.equal("[keys] a  alpha", selector.args.choices[1].label)
+    assert.equal(0, #wezterm._format_calls)
+    assert.is_true(has_log "invalid formatter 'unknown', using plain labels")
+  end)
+
+  it("keeps command ordering stable across sources", function()
+    chord.command.register_many {
+      { id = "registered-1", label = "registered one", action = "registered-one-action" },
+      { id = "registered-2", label = "registered two", action = "registered-two-action" },
+    }
+
+    local config = {}
+    chord.maps(config, {
+      { "g", "global-one-action", "global one" },
+      { "h", "global-two-action", "global two" },
+    })
+    chord.tables(config, {
+      zeta = {
+        meta = { i = "Z", txt = "ZETA", bg = "#333333" },
+        keys = {
+          { "z", "zeta-action", "zeta" },
+        },
+      },
+      alpha = {
+        meta = { i = "A", txt = "ALPHA", bg = "#111111" },
+        keys = {
+          { "a", "alpha-action", "alpha" },
+        },
+      },
+    })
+    wezterm._set_default_keys {
+      { key = "d", mods = "CTRL", action = "default-one-action", desc = "default one" },
+      { key = "e", mods = "CTRL", action = "default-two-action", desc = "default two" },
+    }
+
+    local commands = chord.command.collect(config, {
+      include_defaults = true,
+    })
+
+    local labels = {}
+    for _, cmd in ipairs(commands) do
+      labels[#labels + 1] = cmd.label
+    end
+
+    assert.same({
+      "registered one",
+      "registered two",
+      "global one",
+      "global two",
+      "alpha",
+      "zeta",
+      "default one",
+      "default two",
+    }, labels)
   end)
 
   it("generates command palette entries", function()
