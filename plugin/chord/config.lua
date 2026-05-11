@@ -28,6 +28,9 @@ local M = {}
 ---@field include_defaults boolean
 ---@field include_undocumented boolean
 ---@field dedupe boolean
+---@field sources? string[]|table<string, boolean>
+---@field tables? string[]|table<string, boolean>
+---@field exclude_tables? string[]|table<string, boolean>
 
 ---@class Chord.LogConfig
 ---@field enabled boolean
@@ -97,6 +100,9 @@ local defaults = {
     include_defaults = false,
     include_undocumented = false,
     dedupe = true,
+    sources = nil,
+    tables = nil,
+    exclude_tables = nil,
   },
   log = {
     enabled = true,

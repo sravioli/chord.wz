@@ -101,6 +101,110 @@ local function action_label(action)
   return tostring(action)
 end
 
+local source_aliases = {
+  global = "keys",
+  tables = "key_table",
+  key_tables = "key_table",
+  defaults = "default",
+}
+
+local valid_sources = {
+  registered = true,
+  keys = true,
+  key_table = true,
+  default = true,
+}
+
+---@param name any
+---@return string|nil
+local function normalize_source_name(name)
+  local source = source_aliases[tostring(name)] or tostring(name)
+  if valid_sources[source] then
+    return source
+  end
+
+  logger():warn("command: invalid source '%s' ignored", tostring(name))
+  return nil
+end
+
+---@param value any
+---@param normalize? fun(item:any): string|nil
+---@return table<string, boolean>|nil
+local function option_set(value, normalize)
+  if value == nil then
+    return nil
+  end
+
+  local out = {}
+  local function add(item)
+    local normalized = normalize and normalize(item) or tostring(item)
+    if normalized and normalized ~= "" then
+      out[normalized] = true
+    end
+  end
+
+  if type(value) == "string" then
+    add(value)
+    return out
+  end
+  if type(value) ~= "table" then
+    return out
+  end
+
+  for key, item in pairs(value) do
+    if type(key) == "number" then
+      add(item)
+    elseif item then
+      add(key)
+    end
+  end
+
+  return out
+end
+
+---@param source string
+---@param opts table
+---@return boolean
+local function source_enabled(source, opts)
+  local sources = option_set(opts.sources, normalize_source_name)
+  if sources then
+    return sources[source] == true
+  end
+
+  if source == "registered" then
+    return opts.include_registered ~= false
+  end
+  if source == "keys" then
+    return opts.include_keys ~= false
+  end
+  if source == "key_table" then
+    return opts.include_key_tables ~= false
+  end
+  if source == "default" then
+    return opts.include_defaults == true
+  end
+  return false
+end
+
+---@param table_name string|nil
+---@param opts table
+---@return boolean
+local function table_allowed(table_name, opts)
+  if not table_name then
+    return true
+  end
+
+  local only = option_set(opts.tables)
+  local excluded = option_set(opts.exclude_tables)
+  if excluded and excluded[table_name] then
+    return false
+  end
+  if only then
+    return only[table_name] == true
+  end
+  return true
+end
+
 ---@param source string
 ---@param entry table
 ---@param table_name? string
@@ -221,6 +325,10 @@ end
 ---@param opts table
 ---@param table_name? string
 local function collect_entries(core, commands, seen, source, entries, opts, table_name)
+  if not source_enabled(source, opts) or not table_allowed(table_name, opts) then
+    return
+  end
+
   for _, entry in ipairs(entries or {}) do
     add_command(commands, seen, opts, command_from_entry(core, source, entry, opts, table_name))
   end
@@ -232,16 +340,23 @@ end
 ---@return table<string, boolean>
 local function key_table_names(core, config_table, opts)
   local names = {}
+  if not source_enabled("key_table", opts) then
+    return names
+  end
 
-  if opts.include_key_tables and type(config_table.key_tables) == "table" then
+  if type(config_table.key_tables) == "table" then
     for name in pairs(config_table.key_tables) do
-      names[name] = true
+      if table_allowed(name, opts) then
+        names[name] = true
+      end
     end
   end
 
-  if opts.include_key_tables and type(core._defs) == "table" then
+  if type(core._defs) == "table" then
     for name in pairs(core._defs) do
-      names[name] = true
+      if table_allowed(name, opts) then
+        names[name] = true
+      end
     end
   end
 
@@ -293,15 +408,13 @@ return function(core)
     local seen = {}
     config_table = config_table or {}
 
-    if options.include_registered then
+    if source_enabled("registered", options) then
       for _, cmd in ipairs(core._registered_commands or {}) do
         add_command(commands, seen, options, shallow_copy(cmd))
       end
     end
 
-    if options.include_keys then
-      collect_entries(core, commands, seen, "keys", config_table.keys or {}, options)
-    end
+    collect_entries(core, commands, seen, "keys", config_table.keys or {}, options)
 
     for _, name in ipairs(sorted_names(key_table_names(core, config_table, options))) do
       collect_entries(
@@ -316,7 +429,7 @@ return function(core)
     end
 
     if
-      options.include_defaults
+      source_enabled("default", options)
       and wezterm.gui
       and type(wezterm.gui.default_keys) == "function"
     then

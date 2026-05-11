@@ -146,4 +146,80 @@ describe("chord command picker", function()
     assert.equal(1, #commands)
     assert.equal("alpha", commands[1].label)
   end)
+
+  it("filters commands by source and table", function()
+    chord.command.register {
+      id = "registered",
+      label = "registered",
+      action = "registered-action",
+    }
+
+    local config = {}
+    chord.maps(config, {
+      { "g", "global-action", "global" },
+    })
+    chord.tables(config, {
+      alpha = {
+        meta = { i = "A", txt = "ALPHA", bg = "#111111" },
+        keys = {
+          { "a", "alpha-action", "alpha" },
+        },
+      },
+      beta = {
+        meta = { i = "B", txt = "BETA", bg = "#222222" },
+        keys = {
+          { "b", "beta-action", "beta" },
+        },
+      },
+    })
+    wezterm._set_default_keys {
+      { key = "d", mods = "CTRL", action = "default-action" },
+    }
+
+    local table_commands = chord.command.collect(config, {
+      sources = { "key_table" },
+      tables = { "alpha" },
+    })
+    assert.equal(1, #table_commands)
+    assert.equal("alpha", table_commands[1].label)
+    assert.equal("alpha", table_commands[1].table_name)
+
+    local global_commands = chord.command.collect(config, {
+      sources = { "global" },
+    })
+    assert.equal(1, #global_commands)
+    assert.equal("keys", global_commands[1].source)
+
+    local default_commands = chord.command.collect(config, {
+      sources = { "defaults" },
+    })
+    assert.equal(1, #default_commands)
+    assert.equal("default", default_commands[1].source)
+  end)
+
+  it("ignores excluded key tables", function()
+    local config = {}
+    chord.tables(config, {
+      alpha = {
+        meta = { i = "A", txt = "ALPHA", bg = "#111111" },
+        keys = {
+          { "a", "alpha-action", "alpha" },
+        },
+      },
+      beta = {
+        meta = { i = "B", txt = "BETA", bg = "#222222" },
+        keys = {
+          { "b", "beta-action", "beta" },
+        },
+      },
+    })
+
+    local commands = chord.command.collect(config, {
+      sources = { "tables" },
+      exclude_tables = { "alpha" },
+    })
+
+    assert.equal(1, #commands)
+    assert.equal("beta", commands[1].table_name)
+  end)
 end)
