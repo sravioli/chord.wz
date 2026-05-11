@@ -3,6 +3,10 @@
 local command_options = require "chord.command_options"
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
+---@class Chord.OverlayApi
+---@field action fun(config_table: table, opts?: Chord.OverlayConfig): table
+---@field apply fun(config_table: table, opts?: Chord.OverlayConfig): table
+
 ---@param cmd Chord.Command
 ---@return string
 local function overlay_label(cmd)
@@ -20,13 +24,14 @@ end
 
 ---@param core Chord
 ---@param command table
----@return table
+---@return Chord.OverlayApi
 return function(core, command)
+  ---@type Chord.OverlayApi
   local overlay = {}
 
   ---Return a WezTerm action that opens the Chord help overlay.
   ---@param config_table table
-  ---@param opts? table
+  ---@param opts? Chord.OverlayConfig
   ---@return table
   function overlay.action(config_table, opts)
     return wezterm.action_callback(function(window, pane)
@@ -69,7 +74,7 @@ return function(core, command)
 
   ---Inject a trigger binding that opens the Chord help overlay.
   ---@param config_table table
-  ---@param opts? table
+  ---@param opts? Chord.OverlayConfig
   ---@return table
   function overlay.apply(config_table, opts)
     local options = command_options.overlay(opts)

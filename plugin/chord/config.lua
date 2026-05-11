@@ -15,6 +15,30 @@ local M = {}
 ---@field separator string
 ---@field page_cache_prefix string
 
+---@alias Chord.CommandSource
+---| "registered"
+---| "keys"
+---| "key_table"
+---| "default"
+---| "global"
+---| "tables"
+---| "key_tables"
+---| "defaults"
+
+---@alias Chord.CommandFormatter
+---| "plain"
+---| "wezterm"
+---| "ribbon"
+
+---@alias Chord.CommandColorBy
+---| "mode"
+---| "source"
+---| "none"
+
+---@class Chord.ColorSpec
+---@field fg? string
+---@field bg? string
+
 ---@class Chord.CommandConfig
 ---@field key string
 ---@field desc string
@@ -29,20 +53,31 @@ local M = {}
 ---@field include_defaults boolean
 ---@field include_undocumented boolean
 ---@field dedupe boolean
----@field sources? string[]|table<string, boolean>
+---@field sources? Chord.CommandSource[]|table<Chord.CommandSource, boolean>
 ---@field tables? string[]|table<string, boolean>
 ---@field exclude_tables? string[]|table<string, boolean>
 ---@field style Chord.CommandStyleConfig
+---@field theme? table
+---@field prefix? string
+---@field include_lhs? boolean
+---@field icon? string
+
+---@class Chord.CommandOptions: Chord.CommandConfig
 
 ---@class Chord.CommandStyleConfig
 ---@field enabled boolean
----@field formatter string
----@field color_by string
+---@field formatter Chord.CommandFormatter
+---@field color_by Chord.CommandColorBy
 ---@field include_source boolean
 ---@field include_table boolean
 ---@field mode_fg? string
----@field mode_colors table<string, table>
----@field source_colors table<string, table>
+---@field mode_colors table<string, Chord.ColorSpec>
+---@field source_colors table<string, Chord.ColorSpec>
+
+---@class Chord.CommandPaletteEntry
+---@field brief string
+---@field action any
+---@field icon? string
 
 ---@class Chord.OverlayConfig
 ---@field key string
@@ -52,6 +87,9 @@ local M = {}
 ---@field description string
 ---@field fuzzy_description string
 ---@field alphabet? string
+---@field sources? Chord.CommandSource[]|table<Chord.CommandSource, boolean>
+---@field tables? string[]|table<string, boolean>
+---@field exclude_tables? string[]|table<string, boolean>
 
 ---@class Chord.LogConfig
 ---@field enabled boolean

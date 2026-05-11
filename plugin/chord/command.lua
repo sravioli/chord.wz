@@ -26,6 +26,15 @@ local tconcat = table.concat
 ---@field mods? string
 ---@field action any
 
+---@class Chord.CommandApi
+---@field clear fun()
+---@field register fun(spec: Chord.CommandSpec): Chord.Command|nil
+---@field register_many fun(specs: Chord.CommandSpec[])
+---@field collect fun(config_table: table, opts?: Chord.CommandOptions): Chord.Command[]
+---@field action fun(config_table: table, opts?: Chord.CommandOptions): table
+---@field apply fun(config_table: table, opts?: Chord.CommandOptions): table
+---@field palette fun(config_table: table, opts?: Chord.CommandOptions): Chord.CommandPaletteEntry[]
+
 ---@return Chord.Logger
 local function logger()
   local config = require "chord.config"
@@ -86,7 +95,7 @@ end
 ---@param core Chord
 ---@param source string
 ---@param entry table
----@param opts table
+---@param opts Chord.CommandOptions
 ---@param table_name? string
 ---@return Chord.Command|nil
 local function command_from_entry(core, source, entry, opts, table_name)
@@ -165,7 +174,7 @@ end
 
 ---@param commands Chord.Command[]
 ---@param seen table<string, boolean>
----@param opts table
+---@param opts Chord.CommandOptions
 ---@param cmd Chord.Command|nil
 local function add_command(commands, seen, opts, cmd)
   if not cmd then
@@ -186,7 +195,7 @@ end
 ---@param seen table<string, boolean>
 ---@param source string
 ---@param entries table[]
----@param opts table
+---@param opts Chord.CommandOptions
 ---@param table_name? string
 local function collect_entries(core, commands, seen, source, entries, opts, table_name)
   if
@@ -203,7 +212,7 @@ end
 
 ---@param core Chord
 ---@param config_table table
----@param opts table
+---@param opts Chord.CommandOptions
 ---@return table<string, boolean>
 local function key_table_names(core, config_table, opts)
   local names = {}
@@ -233,7 +242,7 @@ end
 ---@param core Chord
 ---@return table
 return function(core)
-  ---@class Chord.CommandApi
+  ---@type Chord.CommandApi
   local command = {}
 
   ---Clear commands registered through `chord.command.register`.
@@ -267,7 +276,7 @@ return function(core)
 
   ---Collect commands from registered entries, config keys, key tables, and defaults.
   ---@param config_table table
-  ---@param opts? table
+  ---@param opts? Chord.CommandOptions
   ---@return Chord.Command[]
   function command.collect(config_table, opts)
     local options = command_options.command(opts)
@@ -310,7 +319,7 @@ return function(core)
 
   ---Return a WezTerm action that opens the command picker.
   ---@param config_table table
-  ---@param opts? table
+  ---@param opts? Chord.CommandOptions
   ---@return table
   function command.action(config_table, opts)
     return wezterm.action_callback(function(window, pane)
@@ -348,7 +357,7 @@ return function(core)
 
   ---Inject a trigger binding that opens the command picker.
   ---@param config_table table
-  ---@param opts? table
+  ---@param opts? Chord.CommandOptions
   ---@return table
   function command.apply(config_table, opts)
     local options = command_options.command(opts)
@@ -366,8 +375,8 @@ return function(core)
 
   ---Generate WezTerm augment-command-palette entries from Chord commands.
   ---@param config_table table
-  ---@param opts? table
-  ---@return table[]
+  ---@param opts? Chord.CommandOptions
+  ---@return Chord.CommandPaletteEntry[]
   function command.palette(config_table, opts)
     local options = command_options.command(opts)
     local commands = command.collect(config_table, options)

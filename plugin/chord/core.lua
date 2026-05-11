@@ -1042,6 +1042,22 @@ function M.hint_action(name, direction)
   end)
 end
 
+---@class Chord.ConflictEntry
+---@field action any
+---@field index integer
+---@field desc? string
+
+---@class Chord.Conflict
+---@field scope string
+---@field key string
+---@field mods? string
+---@field lhs string
+---@field entries Chord.ConflictEntry[]
+
+---@class Chord.ConflictOptions
+---@field include_key_tables? boolean
+---@field include_descriptions? boolean
+
 ---@param mods string|nil
 ---@return string
 local function sorted_mods(mods)
@@ -1092,8 +1108,8 @@ local function track_conflict(conflicts, scope, entry, index, include_descriptio
 end
 
 ---@param config_table table
----@param opts? table
----@return table[]
+---@param opts? Chord.ConflictOptions
+---@return Chord.Conflict[]
 function M.conflicts(config_table, opts)
   opts = opts or {}
   config_table = config_table or {}
@@ -1136,6 +1152,12 @@ end
 ---@field name string
 ---@field def Chord.KeyTableDef|Chord.KeyTableDefFn
 
+---@class Chord.ModeActivateOptions
+---@field one_shot? boolean
+---@field replace_current? boolean
+---@field until_unknown? boolean
+---@field timeout_milliseconds? integer
+
 ---@param name string
 ---@param def Chord.KeyTableDef|Chord.KeyTableDefFn
 ---@return Chord.Mode
@@ -1148,7 +1170,7 @@ function M.mode(name, def)
 
   ---@param lhs string|table
   ---@param desc? string
-  ---@param opts? table
+  ---@param opts? Chord.ModeActivateOptions
   ---@return table|nil
   function mode:activate(lhs, desc, opts)
     opts = opts or {}
@@ -1209,6 +1231,7 @@ function M.__command_api()
   return load_command()
 end
 
+---@type Chord.CommandApi
 M.command = lazy_proxy(load_command)
 
 ---@return table
@@ -1219,6 +1242,7 @@ local function load_overlay()
   return overlay_api
 end
 
+---@type Chord.OverlayApi
 M.overlay = lazy_proxy(load_overlay)
 
 return M

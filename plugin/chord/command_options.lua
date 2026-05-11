@@ -73,7 +73,7 @@ function M.shallow_copy(value)
 end
 
 ---@param opts? table
----@return Chord.CommandConfig
+---@return Chord.CommandOptions
 function M.command(opts)
   return M.merge(config.get().command or {}, opts)
 end
@@ -143,7 +143,7 @@ function M.option_set(value, normalize)
 end
 
 ---@param source string
----@param opts Chord.CommandConfig
+---@param opts Chord.CommandOptions
 ---@return boolean
 function M.source_enabled(source, opts)
   local sources = M.option_set(opts.sources, M.normalize_source_name)
@@ -167,7 +167,7 @@ function M.source_enabled(source, opts)
 end
 
 ---@param table_name string|nil
----@param opts Chord.CommandConfig
+---@param opts Chord.CommandOptions
 ---@return boolean
 function M.table_allowed(table_name, opts)
   if not table_name then
