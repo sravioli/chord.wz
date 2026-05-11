@@ -312,6 +312,43 @@ describe("chord command picker", function()
     assert.equal(1, #wezterm._format_calls)
   end)
 
+  it("ignores unresolved mode proxy colors when styling picker labels", function()
+    local config = {}
+    chord.tables(config, {
+      mode = function(theme)
+        return {
+          meta = { i = "M", txt = "MODE", bg = theme.ansi[2] },
+          keys = {
+            { "a", "alpha-action", "alpha" },
+          },
+        }
+      end,
+    })
+
+    local action = chord.command.action(config, {
+      sources = { "key_table" },
+      style = {
+        enabled = true,
+        formatter = "wezterm",
+        color_by = "mode",
+      },
+    })
+    local win, pane, calls = new_window()
+
+    action.callback(win, pane)
+
+    local selector = calls[1].action
+    assert.equal("[mode] a  alpha", selector.args.choices[1].label)
+    for _, item in ipairs(wezterm._format_calls[1]) do
+      if item.Foreground then
+        assert.equal("string", type(item.Foreground.Color))
+      end
+      if item.Background then
+        assert.equal("string", type(item.Background.Color))
+      end
+    end
+  end)
+
   it("falls back from ribbon picker labels to wezterm.format", function()
     local original_require = wezterm.plugin.require
     wezterm.plugin.require = function(url)

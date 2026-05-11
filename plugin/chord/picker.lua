@@ -36,6 +36,15 @@ local function badge_text(cmd, style)
   return nil
 end
 
+---@param value any
+---@return string|nil
+local function normalize_color_value(value)
+  if type(value) == "string" and value ~= "" then
+    return value
+  end
+  return nil
+end
+
 ---@param color any
 ---@return table|nil
 local function normalize_color(color)
@@ -43,8 +52,13 @@ local function normalize_color(color)
     return nil
   end
 
-  if color.fg or color.bg then
-    return color
+  local normalized = {
+    fg = normalize_color_value(color.fg),
+    bg = normalize_color_value(color.bg),
+  }
+
+  if normalized.fg or normalized.bg then
+    return normalized
   end
   return nil
 end
@@ -63,8 +77,8 @@ local function mode_color(cmd, style)
   end
 
   local meta = cmd.mode_meta
-  if type(meta) == "table" and meta.bg then
-    return {
+  if type(meta) == "table" then
+    return normalize_color {
       fg = meta.fg or style.mode_fg,
       bg = meta.bg,
     }
