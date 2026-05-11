@@ -27,6 +27,20 @@ local chord = wezterm.plugin.require "https://github.com/sravioli/chord.wz"
 local chord = wezterm.plugin.require("file:///" .. wezterm.config_dir .. "/plugins/chord.wz")
 ```
 
+Chord loads one plugin dependency automatically:
+
+- [`memo.wz`](https://github.com/sravioli/memo.wz) for hint pagination state
+
+Chord can also use optional plugin dependencies when their features need them:
+
+- [`log.wz`](https://github.com/sravioli/log.wz) for tagged internal logging
+- [`ribbon.wz`](https://github.com/sravioli/ribbon.wz) for `hint_layout()` and
+  command picker labels when `formatter = "ribbon"`
+
+If an optional plugin is unavailable, Chord falls back where possible:
+`log.wz` falls back to WezTerm's native `wezterm.log_*` functions, and command
+picker labels fall back to `wezterm.format`.
+
 <!--
 ### Type annotations
 
@@ -69,10 +83,6 @@ chord.setup {
 ```
 
 `setup()` is optional. Defaults are ready for the usual Vim-style notation.
-
-When [`log.wz`](https://github.com/sravioli/log.wz) is available, Chord uses it
-for internal logging. Otherwise, it falls back to WezTerm's native
-`wezterm.log_*` functions.
 
 ## Keymaps
 
