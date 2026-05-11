@@ -4,6 +4,7 @@ local wezterm = require "wezterm"
 describe("chord dependencies", function()
   after_each(function()
     deps._cache = {}
+    package.loaded["log.api"] = nil
     package.loaded["memo.api"] = nil
     package.loaded["ribbon.api"] = nil
   end)

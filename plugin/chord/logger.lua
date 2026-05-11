@@ -1,5 +1,6 @@
 ---@module "chord.logger"
 
+local deps = require "chord.deps"
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
 -- selene: allow(incorrect_standard_library_use)
@@ -17,6 +18,13 @@ local levels = {
   INFO = 1,
   WARN = 2,
   ERROR = 3,
+}
+
+local level_names = {
+  [levels.DEBUG] = "debug",
+  [levels.INFO] = "info",
+  [levels.WARN] = "warn",
+  [levels.ERROR] = "error",
 }
 
 ---@param value any
@@ -85,6 +93,30 @@ end
 
 ---@param tag string
 ---@param cfg Chord.LogConfig
+---@return table|nil
+local function external_logger(tag, cfg)
+  local log = deps.optional "log"
+  if not log or type(log.new) ~= "function" then
+    return nil
+  end
+
+  if type(log.setup) == "function" then
+    pcall(log.setup, {
+      enabled = cfg.enabled ~= false,
+      threshold = cfg.threshold or "warn",
+      sinks = { default_enabled = true },
+    })
+  end
+
+  local ok, logger = pcall(log.new, tag, cfg.enabled ~= false)
+  if ok and logger and type(logger.log) == "function" then
+    return logger
+  end
+  return nil
+end
+
+---@param tag string
+---@param cfg Chord.LogConfig
 ---@return Chord.Logger
 function M.new(tag, cfg)
   cfg = cfg or {}
@@ -92,6 +124,7 @@ function M.new(tag, cfg)
     tag = tag,
     enabled = cfg.enabled ~= false,
     threshold = resolve_threshold(cfg.threshold),
+    _external = external_logger(tag, cfg),
   }, M)
 end
 
@@ -104,7 +137,12 @@ function M:write(level, message, ...)
     return nil
   end
 
-  emit(level, self.tag, format_message(message, ...))
+  local formatted = format_message(message, ...)
+  if self._external then
+    self._external:log(level_names[level] or level, formatted)
+  else
+    emit(level, self.tag, formatted)
+  end
   return nil
 end
 

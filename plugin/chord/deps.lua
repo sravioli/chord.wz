@@ -7,6 +7,7 @@ local M = {
 }
 
 local urls = {
+  log = "https://github.com/sravioli/log.wz",
   memo = "https://github.com/sravioli/memo.wz",
   ribbon = "https://github.com/sravioli/ribbon.wz",
 }
@@ -48,6 +49,11 @@ end
 ---@return table
 function M.memo()
   return require_dependency "memo"
+end
+
+---@return table
+function M.log()
+  return require_dependency "log"
 end
 
 ---@return table

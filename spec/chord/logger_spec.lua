@@ -1,8 +1,11 @@
 local Logger = require "chord.logger"
+local deps = require "chord.deps"
 local wezterm = require "wezterm"
 
 describe("chord logger", function()
   before_each(function()
+    deps._cache = {}
+    package.loaded["log.api"] = nil
     wezterm._logs = {}
   end)
 
@@ -39,5 +42,46 @@ describe("chord logger", function()
 
     assert.equal(1, #wezterm._logs)
     assert.same({ level = "error", message = "[Numeric] visible" }, wezterm._logs[1])
+  end)
+
+  it("uses log.wz when the optional logger is available", function()
+    local events = {}
+    local setups = {}
+    local external = {}
+
+    function external.setup(opts)
+      setups[#setups + 1] = opts
+    end
+
+    function external.new(tag, enabled)
+      return {
+        log = function(_, level, message)
+          events[#events + 1] = {
+            tag = tag,
+            enabled = enabled,
+            level = level,
+            message = message,
+          }
+        end,
+      }
+    end
+
+    package.loaded["log.api"] = external
+    deps._cache.log = nil
+
+    local logger = Logger.new("External", { threshold = "debug" })
+    logger:debug("debug %s", "message")
+    logger:warn("warn %s", "message")
+
+    assert.same({
+      enabled = true,
+      threshold = "debug",
+      sinks = { default_enabled = true },
+    }, setups[1])
+    assert.same({
+      { tag = "External", enabled = true, level = "debug", message = "debug message" },
+      { tag = "External", enabled = true, level = "warn", message = "warn message" },
+    }, events)
+    assert.same({}, wezterm._logs)
   end)
 end)

@@ -70,6 +70,10 @@ chord.setup {
 
 `setup()` is optional. Defaults are ready for the usual Vim-style notation.
 
+When [`log.wz`](https://github.com/sravioli/log.wz) is available, Chord uses it
+for internal logging. Otherwise, it falls back to WezTerm's native
+`wezterm.log_*` functions.
+
 ## Keymaps
 
 `chord.maps(config, mappings)` appends normalized entries to `config.keys`.
