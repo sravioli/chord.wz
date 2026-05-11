@@ -139,6 +139,23 @@ chord.tables(config, {
 })
 ```
 
+Use `chord.mode()` when you want the key-table definition and activation
+binding to stay together:
+
+```lua
+local resize = chord.mode("resize_mode", {
+  one_shot = false,
+  meta = { i = "R", txt = "RESIZE", bg = "#7aa2f7" },
+  keys = {
+    { "h", act.AdjustPaneSize { "Left", 5 }, "left" },
+    { "l", act.AdjustPaneSize { "Right", 5 }, "right" },
+  },
+})
+
+chord.tables(config, { resize })
+config.keys[#config.keys + 1] = resize:activate("<leader>r", "resize mode")
+```
+
 ## Hints
 
 Chord can render a fixed-width hint string for the current key table:
@@ -198,6 +215,69 @@ chord.command.apply(config, {
 })
 ```
 
+Filter the picker by command source or key table:
+
+```lua
+chord.command.apply(config, {
+  sources = { "key_table" },
+  tables = { "resize_mode", "window_mode" },
+})
+```
+
+Sources are `registered`, `keys`, `key_table`, and `default`. Chord also accepts
+`global` for `keys`, `tables` or `key_tables` for `key_table`, and `defaults`
+for `default`.
+
+Enable styled labels when you want picker rows to show mode or source context.
+Plain labels remain the default.
+
+```lua
+chord.command.apply(config, {
+  style = {
+    enabled = true,
+    formatter = "wezterm",
+    color_by = "mode",
+    mode_colors = {
+      resize_mode = { fg = "#1a1b26", bg = "#7aa2f7" },
+      window_mode = { fg = "#1a1b26", bg = "#bb9af7" },
+    },
+  },
+})
+```
+
+`formatter = "wezterm"` uses `wezterm.format` directly. `formatter = "ribbon"`
+uses `ribbon.wz` when available and falls back to `wezterm.format` with a
+warning when it is not.
+
+Generate command-palette entries from the same command metadata:
+
+```lua
+wezterm.on("augment-command-palette", function()
+  return chord.command.palette(config, {
+    prefix = "Chord: ",
+    sources = { "keys", "key_table" },
+  })
+end)
+```
+
+Chord returns entries only; it does not register WezTerm events for you.
+
+## Help overlay
+
+Use `chord.overlay.apply()` to bind a searchable help overlay built from Chord
+commands:
+
+```lua
+chord.overlay.apply(config, {
+  key = "<leader>?",
+  title = "Leader keys",
+  sources = { "keys", "key_table" },
+})
+```
+
+The first overlay implementation uses WezTerm's `InputSelector` and groups rows
+by global keys, registered commands, defaults, or key-table name.
+
 ## Overrides
 
 `apply_overrides()` is useful when your configuration has a user override layer.
@@ -225,6 +305,20 @@ chord.apply_overrides(config, {
 })
 ```
 
+## Conflict diagnostics
+
+`conflicts()` reports duplicate bindings without changing runtime behavior:
+
+```lua
+local conflicts = chord.conflicts(config)
+for _, conflict in ipairs(conflicts) do
+  wezterm.log_warn(conflict.scope .. " duplicates " .. conflict.lhs)
+end
+```
+
+Conflicts are grouped by scope, key, and modifiers. Global keys and each key
+table are checked independently.
+
 ## API
 
 | Function                          | Description                                      |
@@ -238,8 +332,10 @@ chord.apply_overrides(config, {
 | `table(mappings)`                 | Build a WezTerm key table.                       |
 | `maps(config, mappings)`          | Append mappings to `config.keys`.                |
 | `tables(config, defs)`            | Register `config.key_tables` and mode metadata.  |
+| `mode(name, def)`                 | Create a key-table helper with activation.       |
 | `get_modes(theme)`                | Return metadata for registered key tables.       |
 | `apply_overrides(config, specs)`  | Apply user key and key-table overrides.          |
+| `conflicts(config, opts?)`        | Report duplicate bindings without applying them. |
 | `hint(config, name, width, win)`  | Render plain fixed-width hints.                  |
 | `hint_layout(...)`                | Render styled hints as a Ribbon instance.        |
 | `hint_action(name, direction)`    | Return an action callback for hint pagination.   |
@@ -248,7 +344,10 @@ chord.apply_overrides(config, {
 | `command.collect(config, opts?)`  | Collect commands from config and registrations.  |
 | `command.action(config, opts?)`   | Return an action that opens the command picker.  |
 | `command.apply(config, opts?)`    | Add a trigger binding for the command picker.    |
+| `command.palette(config, opts?)`  | Generate `augment-command-palette` entries.      |
 | `command.clear()`                 | Clear explicitly registered commands.            |
+| `overlay.action(config, opts?)`   | Return an action that opens the help overlay.    |
+| `overlay.apply(config, opts?)`    | Add a trigger binding for the help overlay.      |
 
 ## License
 
