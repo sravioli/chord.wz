@@ -1023,6 +1023,95 @@ function M.hint_action(name, direction)
   end)
 end
 
+---@param mods string|nil
+---@return string
+local function sorted_mods(mods)
+  local parts = {}
+  for mod in tostring(mods or ""):gmatch "[^|]+" do
+    if mod ~= "" then
+      parts[#parts + 1] = mod
+    end
+  end
+  table.sort(parts)
+  return tconcat(parts, "|")
+end
+
+---@param conflicts table<string, table>
+---@param scope string
+---@param entry table
+---@param index integer
+---@param include_descriptions boolean
+local function track_conflict(conflicts, scope, entry, index, include_descriptions)
+  if type(entry) ~= "table" or entry.key == nil then
+    return
+  end
+
+  local mods = sorted_mods(entry.mods)
+  local key = tostring(entry.key or "")
+  local id = scope .. "|" .. mods .. "|" .. key
+  local group = conflicts[id]
+
+  if not group then
+    group = {
+      scope = scope,
+      key = key,
+      mods = mods ~= "" and mods or nil,
+      lhs = M.__entry_lhs(entry),
+      entries = {},
+    }
+    conflicts[id] = group
+  end
+
+  local item = {
+    action = entry.action,
+    index = index,
+  }
+  if include_descriptions then
+    item.desc = entry.desc
+  end
+  group.entries[#group.entries + 1] = item
+end
+
+---@param config_table table
+---@param opts? table
+---@return table[]
+function M.conflicts(config_table, opts)
+  opts = opts or {}
+  config_table = config_table or {}
+
+  local include_key_tables = opts.include_key_tables ~= false
+  local include_descriptions = opts.include_descriptions ~= false
+  local groups = {}
+
+  for index, entry in ipairs(config_table.keys or {}) do
+    track_conflict(groups, "global", entry, index, include_descriptions)
+  end
+
+  if include_key_tables and type(config_table.key_tables) == "table" then
+    for table_name, entries in pairs(config_table.key_tables) do
+      for index, entry in ipairs(entries or {}) do
+        track_conflict(groups, "table:" .. tostring(table_name), entry, index, include_descriptions)
+      end
+    end
+  end
+
+  local out = {}
+  for _, group in pairs(groups) do
+    if #group.entries > 1 then
+      out[#out + 1] = group
+    end
+  end
+
+  table.sort(out, function(a, b)
+    if a.scope == b.scope then
+      return (a.lhs or "") < (b.lhs or "")
+    end
+    return a.scope < b.scope
+  end)
+
+  return out
+end
+
 local command_api
 
 ---@param loader fun(): table
