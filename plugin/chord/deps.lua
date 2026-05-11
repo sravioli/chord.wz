@@ -12,25 +12,37 @@ local urls = {
 }
 
 ---@param name string
----@return table
-local function require_dependency(name)
+---@return table|nil
+---@return any error
+function M.optional(name)
   if M._cache[name] then
-    return M._cache[name]
+    return M._cache[name], nil
   end
 
   local ok, plugin = pcall(require, name .. ".api")
   if ok and plugin then
     M._cache[name] = plugin
-    return plugin
+    return plugin, nil
   end
 
   ok, plugin = pcall(wezterm.plugin.require, urls[name])
   if ok and plugin then
     M._cache[name] = plugin
+    return plugin, nil
+  end
+
+  return nil, plugin
+end
+
+---@param name string
+---@return table
+local function require_dependency(name)
+  local plugin, err = M.optional(name)
+  if plugin then
     return plugin
   end
 
-  error(("[chord] unable to load dependency %s: %s"):format(urls[name], tostring(plugin)))
+  error(("[chord] unable to load dependency %s: %s"):format(urls[name], tostring(err)))
 end
 
 ---@return table

@@ -31,4 +31,19 @@ describe("chord dependencies", function()
     assert.is_false(ok)
     assert.truthy(tostring(err):find("unable to load dependency", 1, true))
   end)
+
+  it("returns nil for unavailable optional dependencies", function()
+    local original_require = wezterm.plugin.require
+    wezterm.plugin.require = function()
+      error "missing dependency"
+    end
+    deps._cache.ribbon = nil
+
+    local plugin, err = deps.optional "ribbon"
+
+    wezterm.plugin.require = original_require
+
+    assert.is_nil(plugin)
+    assert.truthy(tostring(err):find("missing dependency", 1, true))
+  end)
 end)

@@ -31,6 +31,17 @@ local M = {}
 ---@field sources? string[]|table<string, boolean>
 ---@field tables? string[]|table<string, boolean>
 ---@field exclude_tables? string[]|table<string, boolean>
+---@field style Chord.CommandStyleConfig
+
+---@class Chord.CommandStyleConfig
+---@field enabled boolean
+---@field formatter string
+---@field color_by string
+---@field include_source boolean
+---@field include_table boolean
+---@field mode_fg? string
+---@field mode_colors table<string, table>
+---@field source_colors table<string, table>
 
 ---@class Chord.LogConfig
 ---@field enabled boolean
@@ -103,6 +114,21 @@ local defaults = {
     sources = nil,
     tables = nil,
     exclude_tables = nil,
+    style = {
+      enabled = false,
+      formatter = "plain",
+      color_by = "mode",
+      include_source = true,
+      include_table = true,
+      mode_fg = nil,
+      mode_colors = {},
+      source_colors = {
+        registered = { fg = "#c0caf5", bg = "#414868" },
+        keys = { fg = "#1a1b26", bg = "#9ece6a" },
+        key_table = { fg = "#1a1b26", bg = "#7aa2f7" },
+        default = { fg = "#1a1b26", bg = "#e0af68" },
+      },
+    },
   },
   log = {
     enabled = true,

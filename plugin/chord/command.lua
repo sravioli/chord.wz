@@ -15,6 +15,7 @@ local tconcat = table.concat
 ---@field source string
 ---@field table_name? string
 ---@field binding_id? string
+---@field mode_meta? Chord.KeyMeta
 
 ---@class Chord.CommandSpec
 ---@field id? string
@@ -26,13 +27,45 @@ local tconcat = table.concat
 ---@field action any
 
 ---@param value any
+---@return any
+local function clone(value)
+  if type(value) ~= "table" then
+    return value
+  end
+
+  local out = {}
+  for k, v in pairs(value) do
+    out[k] = clone(v)
+  end
+  return out
+end
+
+---@param base table
+---@param override table|nil
+---@return table
+local function merge(base, override)
+  local out = clone(base or {})
+  if type(override) ~= "table" then
+    return out
+  end
+
+  for k, v in pairs(override) do
+    if type(v) == "table" and type(out[k]) == "table" then
+      out[k] = merge(out[k], v)
+    else
+      out[k] = clone(v)
+    end
+  end
+  return out
+end
+
+---@param value any
 ---@return table
 local function shallow_copy(value)
   local out = {}
   if type(value) ~= "table" then
     return out
   end
-
   for k, v in pairs(value) do
     out[k] = v
   end
@@ -47,11 +80,7 @@ end
 ---@param opts? table
 ---@return table
 local function command_options(opts)
-  local cfg = shallow_copy(config.get().command or {})
-  for key, value in pairs(opts or {}) do
-    cfg[key] = value
-  end
-  return cfg
+  return merge(config.get().command or {}, opts)
 end
 
 ---@param input table<string, boolean>
@@ -253,6 +282,7 @@ local function command_from_entry(core, source, entry, opts, table_name)
     source = source,
     table_name = table_name,
     binding_id = bind,
+    mode_meta = table_name and core.__mode_meta(table_name, opts.theme) or nil,
   }
 end
 

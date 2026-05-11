@@ -1,4 +1,5 @@
 local chord = require "chord.api"
+local deps = require "chord.deps"
 local wezterm = require "wezterm"
 
 local function reset()
@@ -7,6 +8,9 @@ local function reset()
   }
   chord.command.clear()
   chord.apply_overrides({}, { enabled = { key_tables = false } })
+  deps._cache = {}
+  wezterm._logs = {}
+  wezterm._format_calls = {}
   wezterm._set_default_keys {}
 end
 
@@ -221,5 +225,66 @@ describe("chord command picker", function()
 
     assert.equal(1, #commands)
     assert.equal("beta", commands[1].table_name)
+  end)
+
+  it("builds styled picker labels with wezterm.format", function()
+    local config = {}
+    chord.tables(config, {
+      mode = {
+        meta = { i = "M", txt = "MODE", bg = "#111111" },
+        keys = {
+          { "a", "alpha-action", "alpha" },
+        },
+      },
+    })
+
+    local action = chord.command.action(config, {
+      sources = { "key_table" },
+      style = {
+        enabled = true,
+        formatter = "wezterm",
+        mode_colors = {
+          mode = { fg = "#000000", bg = "#ffffff" },
+        },
+      },
+    })
+    local win, pane, calls = new_window()
+
+    action.callback(win, pane)
+
+    local selector = calls[1].action
+    assert.equal("[mode] a  alpha", selector.args.choices[1].label)
+    assert.equal(1, #wezterm._format_calls)
+  end)
+
+  it("falls back from ribbon picker labels to wezterm.format", function()
+    local original_require = wezterm.plugin.require
+    wezterm.plugin.require = function(url)
+      if tostring(url):find("ribbon.wz", 1, true) then
+        error "missing ribbon"
+      end
+      return original_require(url)
+    end
+
+    local config = {}
+    chord.maps(config, {
+      { "a", "alpha-action", "alpha" },
+    })
+
+    local action = chord.command.action(config, {
+      style = {
+        enabled = true,
+        formatter = "ribbon",
+      },
+    })
+    local win, pane, calls = new_window()
+
+    action.callback(win, pane)
+
+    wezterm.plugin.require = original_require
+
+    local selector = calls[1].action
+    assert.equal("[keys] a  alpha", selector.args.choices[1].label)
+    assert.equal(1, #wezterm._format_calls)
   end)
 end)

@@ -3,6 +3,7 @@ local wezterm = {}
 wezterm.GLOBAL = {}
 wezterm._logs = {}
 wezterm._default_keys = {}
+wezterm._format_calls = {}
 
 local memo_store = {}
 local memo = {
@@ -79,6 +80,7 @@ function wezterm.column_width(value)
 end
 
 function wezterm.format(items)
+  wezterm._format_calls[#wezterm._format_calls + 1] = items
   local out = {}
   for _, item in ipairs(items or {}) do
     if item.Text then

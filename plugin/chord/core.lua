@@ -660,6 +660,19 @@ function M.get_modes(theme)
   return modes
 end
 
+---@param name string
+---@param theme? table
+---@return Chord.KeyMeta|nil
+function M.__mode_meta(name, theme)
+  local def = M._defs and M._defs[name]
+  if not def then
+    return nil
+  end
+
+  local resolved = resolve_def(name, def, theme or proxy_theme())
+  return resolved and resolved.meta or nil
+end
+
 ---@return table<string, string>
 local function get_rev_aliases()
   if not M._rev_aliases then
