@@ -1,47 +1,7 @@
 ---@module "chord.overlay"
 
-local config = require "chord.config"
+local command_options = require "chord.command_options"
 local wezterm = require "wezterm" --[[@as Wezterm]]
-
----@param value any
----@return any
-local function clone(value)
-  if type(value) ~= "table" then
-    return value
-  end
-
-  local out = {}
-  for k, v in pairs(value) do
-    out[k] = clone(v)
-  end
-  return out
-end
-
----@param base table
----@param override table|nil
----@return table
-local function merge(base, override)
-  local out = clone(base or {})
-  if type(override) ~= "table" then
-    return out
-  end
-
-  for k, v in pairs(override) do
-    if type(v) == "table" and type(out[k]) == "table" then
-      out[k] = merge(out[k], v)
-    else
-      out[k] = clone(v)
-    end
-  end
-
-  return out
-end
-
----@param opts? table
----@return table
-local function overlay_options(opts)
-  return merge(config.get().overlay or {}, opts)
-end
 
 ---@param cmd Chord.Command
 ---@return string
@@ -70,7 +30,7 @@ return function(core, command)
   ---@return table
   function overlay.action(config_table, opts)
     return wezterm.action_callback(function(window, pane)
-      local options = overlay_options(opts)
+      local options = command_options.overlay(opts)
       local commands = command.collect(config_table, options)
       local by_id = {}
       local choices = {}
@@ -112,7 +72,7 @@ return function(core, command)
   ---@param opts? table
   ---@return table
   function overlay.apply(config_table, opts)
-    local options = overlay_options(opts)
+    local options = command_options.overlay(opts)
     local action = overlay.action(config_table, options)
 
     config_table.keys = config_table.keys or {}

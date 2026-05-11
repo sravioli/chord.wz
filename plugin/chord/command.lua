@@ -1,7 +1,7 @@
 ---@module "chord.command"
 
 local Logger = require "chord.logger"
-local config = require "chord.config"
+local command_options = require "chord.command_options"
 local picker = require "chord.picker"
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
@@ -26,72 +26,10 @@ local tconcat = table.concat
 ---@field mods? string
 ---@field action any
 
----@param value any
----@return any
-local function clone(value)
-  if type(value) ~= "table" then
-    return value
-  end
-
-  local out = {}
-  for k, v in pairs(value) do
-    out[k] = clone(v)
-  end
-  return out
-end
-
----@param base table
----@param override table|nil
----@return table
-local function merge(base, override)
-  local out = clone(base or {})
-  if type(override) ~= "table" then
-    return out
-  end
-
-  for k, v in pairs(override) do
-    if type(v) == "table" and type(out[k]) == "table" then
-      out[k] = merge(out[k], v)
-    else
-      out[k] = clone(v)
-    end
-  end
-  return out
-end
-
----@param value any
----@return table
-local function shallow_copy(value)
-  local out = {}
-  if type(value) ~= "table" then
-    return out
-  end
-  for k, v in pairs(value) do
-    out[k] = v
-  end
-  return out
-end
-
 ---@return Chord.Logger
 local function logger()
+  local config = require "chord.config"
   return Logger.new("Chord", config.get().log)
-end
-
----@param opts? table
----@return table
-local function command_options(opts)
-  return merge(config.get().command or {}, opts)
-end
-
----@param input table<string, boolean>
----@return string[]
-local function sorted_names(input)
-  local names = {}
-  for name in pairs(input or {}) do
-    names[#names + 1] = name
-  end
-  table.sort(names)
-  return names
 end
 
 ---@param mods string|nil
@@ -128,110 +66,6 @@ local function action_label(action)
   end
 
   return tostring(action)
-end
-
-local source_aliases = {
-  global = "keys",
-  tables = "key_table",
-  key_tables = "key_table",
-  defaults = "default",
-}
-
-local valid_sources = {
-  registered = true,
-  keys = true,
-  key_table = true,
-  default = true,
-}
-
----@param name any
----@return string|nil
-local function normalize_source_name(name)
-  local source = source_aliases[tostring(name)] or tostring(name)
-  if valid_sources[source] then
-    return source
-  end
-
-  logger():warn("command: invalid source '%s' ignored", tostring(name))
-  return nil
-end
-
----@param value any
----@param normalize? fun(item:any): string|nil
----@return table<string, boolean>|nil
-local function option_set(value, normalize)
-  if value == nil then
-    return nil
-  end
-
-  local out = {}
-  local function add(item)
-    local normalized = normalize and normalize(item) or tostring(item)
-    if normalized and normalized ~= "" then
-      out[normalized] = true
-    end
-  end
-
-  if type(value) == "string" then
-    add(value)
-    return out
-  end
-  if type(value) ~= "table" then
-    return out
-  end
-
-  for key, item in pairs(value) do
-    if type(key) == "number" then
-      add(item)
-    elseif item then
-      add(key)
-    end
-  end
-
-  return out
-end
-
----@param source string
----@param opts table
----@return boolean
-local function source_enabled(source, opts)
-  local sources = option_set(opts.sources, normalize_source_name)
-  if sources then
-    return sources[source] == true
-  end
-
-  if source == "registered" then
-    return opts.include_registered ~= false
-  end
-  if source == "keys" then
-    return opts.include_keys ~= false
-  end
-  if source == "key_table" then
-    return opts.include_key_tables ~= false
-  end
-  if source == "default" then
-    return opts.include_defaults == true
-  end
-  return false
-end
-
----@param table_name string|nil
----@param opts table
----@return boolean
-local function table_allowed(table_name, opts)
-  if not table_name then
-    return true
-  end
-
-  local only = option_set(opts.tables)
-  local excluded = option_set(opts.exclude_tables)
-  if excluded and excluded[table_name] then
-    return false
-  end
-  if only then
-    return only[table_name] == true
-  end
-  return true
 end
 
 ---@param source string
@@ -355,7 +189,10 @@ end
 ---@param opts table
 ---@param table_name? string
 local function collect_entries(core, commands, seen, source, entries, opts, table_name)
-  if not source_enabled(source, opts) or not table_allowed(table_name, opts) then
+  if
+    not command_options.source_enabled(source, opts)
+    or not command_options.table_allowed(table_name, opts)
+  then
     return
   end
 
@@ -370,13 +207,13 @@ end
 ---@return table<string, boolean>
 local function key_table_names(core, config_table, opts)
   local names = {}
-  if not source_enabled("key_table", opts) then
+  if not command_options.source_enabled("key_table", opts) then
     return names
   end
 
   if type(config_table.key_tables) == "table" then
     for name in pairs(config_table.key_tables) do
-      if table_allowed(name, opts) then
+      if command_options.table_allowed(name, opts) then
         names[name] = true
       end
     end
@@ -384,7 +221,7 @@ local function key_table_names(core, config_table, opts)
 
   if type(core._defs) == "table" then
     for name in pairs(core._defs) do
-      if table_allowed(name, opts) then
+      if command_options.table_allowed(name, opts) then
         names[name] = true
       end
     end
@@ -433,20 +270,22 @@ return function(core)
   ---@param opts? table
   ---@return Chord.Command[]
   function command.collect(config_table, opts)
-    local options = command_options(opts)
+    local options = command_options.command(opts)
     local commands = {}
     local seen = {}
     config_table = config_table or {}
 
-    if source_enabled("registered", options) then
+    if command_options.source_enabled("registered", options) then
       for _, cmd in ipairs(core._registered_commands or {}) do
-        add_command(commands, seen, options, shallow_copy(cmd))
+        add_command(commands, seen, options, command_options.shallow_copy(cmd))
       end
     end
 
     collect_entries(core, commands, seen, "keys", config_table.keys or {}, options)
 
-    for _, name in ipairs(sorted_names(key_table_names(core, config_table, options))) do
+    for _, name in
+      ipairs(command_options.sorted_names(key_table_names(core, config_table, options)))
+    do
       collect_entries(
         core,
         commands,
@@ -459,7 +298,7 @@ return function(core)
     end
 
     if
-      source_enabled("default", options)
+      command_options.source_enabled("default", options)
       and wezterm.gui
       and type(wezterm.gui.default_keys) == "function"
     then
@@ -475,7 +314,7 @@ return function(core)
   ---@return table
   function command.action(config_table, opts)
     return wezterm.action_callback(function(window, pane)
-      local options = command_options(opts)
+      local options = command_options.command(opts)
       local commands = command.collect(config_table, options)
       local by_id = {}
 
@@ -512,7 +351,7 @@ return function(core)
   ---@param opts? table
   ---@return table
   function command.apply(config_table, opts)
-    local options = command_options(opts)
+    local options = command_options.command(opts)
     local action = command.action(config_table, options)
 
     config_table.keys = config_table.keys or {}
@@ -530,7 +369,7 @@ return function(core)
   ---@param opts? table
   ---@return table[]
   function command.palette(config_table, opts)
-    local options = command_options(opts)
+    local options = command_options.command(opts)
     local commands = command.collect(config_table, options)
     local prefix = options.prefix == nil and "Chord: " or tostring(options.prefix)
     local include_lhs = options.include_lhs ~= false
