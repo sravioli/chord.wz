@@ -47,4 +47,11 @@ describe("chord dependencies", function()
     assert.is_nil(plugin)
     assert.truthy(tostring(err):find("missing dependency", 1, true))
   end)
+
+  it("reports unknown optional dependencies", function()
+    local plugin, err = deps.optional "missing"
+
+    assert.is_nil(plugin)
+    assert.equal("unknown dependency: missing", err)
+  end)
 end)
