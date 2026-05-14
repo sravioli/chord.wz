@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [1.1.0](https://github.com/sravioli/chord.wz/compare/4a14c582b2d098e46d6e3fe82aaca503b96002c0..1.1.0) - 2026-05-14
+#### Bug Fixes
+- (**picker**) reset styled choice labels - ([8774f2b](https://github.com/sravioli/chord.wz/commit/8774f2b5a0c7eeb02b5210f316a3043581e7b896)) - sravioli
+- (**picker**) ignore unresolved mode colors - ([4a14c58](https://github.com/sravioli/chord.wz/commit/4a14c582b2d098e46d6e3fe82aaca503b96002c0)) - sravioli
+#### Documentation
+- (**github**) add pull request templates - ([a6b9570](https://github.com/sravioli/chord.wz/commit/a6b957072eb90f1ac0ce9f162a3d9642e6b5e3dd)) - sravioli
+- (**github**) polish issue templates - ([5b356bf](https://github.com/sravioli/chord.wz/commit/5b356bf1e08654dad78acd26737e1b185f603f2b)) - sravioli
+- (**lua**) polish comment wording - ([14b6b50](https://github.com/sravioli/chord.wz/commit/14b6b5086b9ffcff183ebfdc5171e9ed7961f850)) - sravioli
+- (**readme**) improve readme clarity - ([04a044c](https://github.com/sravioli/chord.wz/commit/04a044cb0aa3e4ee6dcb7e9584f69623316835ac)) - sravioli
+#### Refactoring
+- (**deps**) use warp table helpers - ([3a56282](https://github.com/sravioli/chord.wz/commit/3a5628238f4954cefbc4642dcae277eea82cd3a3)) - sravioli
+
+- - -
+
 ## [1.0.0](https://github.com/sravioli/chord.wz/compare/740a510b718f41eed9b9074cef670de3571aa455..1.0.0) - 2026-05-11
 #### Features
 - (**chord**) add standalone key mapping plugin - ([740a510](https://github.com/sravioli/chord.wz/commit/740a510b718f41eed9b9074cef670de3571aa455)) - sravioli
