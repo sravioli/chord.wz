@@ -24,6 +24,10 @@ M.plugins = {
     module = "ribbon.api",
     url = "https://github.com/sravioli/ribbon.wz",
   },
+  warp = {
+    module = "warp.api",
+    url = "https://github.com/sravioli/warp.wz",
+  },
 }
 
 ---@param name string
@@ -80,6 +84,11 @@ end
 ---@return table
 function M.ribbon()
   return require_dependency "ribbon"
+end
+
+---@return table
+function M.warp()
+  return require_dependency "warp"
 end
 
 return M

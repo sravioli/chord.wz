@@ -2,6 +2,7 @@
 
 local Logger = require "chord.logger"
 local config = require "chord.config"
+local tbl = require("chord.deps").warp().table
 
 local M = {}
 
@@ -27,49 +28,24 @@ end
 ---@param value any
 ---@return any
 function M.clone(value)
-  if type(value) ~= "table" then
-    return value
-  end
-
-  local out = {}
-  for k, v in pairs(value) do
-    out[k] = M.clone(v)
-  end
-  return out
+  return tbl.deepcopy(value)
 end
 
 ---@param base table
 ---@param override table|nil
 ---@return table
 function M.merge(base, override)
-  local out = M.clone(base or {})
-  if type(override) ~= "table" then
-    return out
-  end
-
-  for k, v in pairs(override) do
-    if type(v) == "table" and type(out[k]) == "table" then
-      out[k] = M.merge(out[k], v)
-    else
-      out[k] = M.clone(v)
-    end
-  end
-
-  return out
+  return tbl.merge("force", tbl.deepcopy(base or {}), tbl.deepcopy(override or {}))
 end
 
 ---@param value any
 ---@return table
 function M.shallow_copy(value)
-  local out = {}
   if type(value) ~= "table" then
-    return out
+    return {}
   end
 
-  for k, v in pairs(value) do
-    out[k] = v
-  end
-  return out
+  return tbl.copy(value)
 end
 
 ---@param opts? table

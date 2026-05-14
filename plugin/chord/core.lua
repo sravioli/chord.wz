@@ -3,6 +3,7 @@
 local Logger = require "chord.logger"
 local config = require "chord.config"
 local deps = require "chord.deps"
+local tbl = deps.warp().table
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
 local sgsub, ssub, smatch, sformat = string.gsub, string.sub, string.match, string.format
@@ -92,15 +93,11 @@ end
 ---@param value any
 ---@return table
 local function shallow_copy(value)
-  local out = {}
   if type(value) ~= "table" then
-    return out
+    return {}
   end
 
-  for k, v in pairs(value) do
-    out[k] = v
-  end
-  return out
+  return tbl.copy(value)
 end
 
 ---@param value any

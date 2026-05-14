@@ -29,9 +29,11 @@ local chord = wezterm.plugin.require "https://github.com/sravioli/chord.wz"
 local chord = wezterm.plugin.require("file:///" .. wezterm.config_dir .. "/plugins/chord.wz")
 ```
 
-Chord loads one dependency automatically:
+Chord loads these dependencies automatically:
 
 - [`memo.wz`](https://github.com/sravioli/memo.wz) for hint pagination state
+- [`warp.wz`](https://github.com/sravioli/warp.wz) for table helpers used by
+  configuration and command discovery
 
 Chord can use these optional dependencies when a feature needs them:
 

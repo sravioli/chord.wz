@@ -1,5 +1,7 @@
 ---@module "chord.config"
 
+local tbl = require("chord.deps").warp().table
+
 local M = {}
 
 ---@class Chord.Config
@@ -193,41 +195,14 @@ local defaults = {
   },
 }
 
----@param value any
----@return any
-local function clone(value)
-  if type(value) ~= "table" then
-    return value
-  end
-
-  local out = {}
-  for k, v in pairs(value) do
-    out[k] = clone(v)
-  end
-  return out
-end
-
 ---@param base table
 ---@param override table|nil
 ---@return table
 local function merge(base, override)
-  local out = clone(base)
-  if type(override) ~= "table" then
-    return out
-  end
-
-  for k, v in pairs(override) do
-    if type(v) == "table" and type(out[k]) == "table" then
-      out[k] = merge(out[k], v)
-    else
-      out[k] = clone(v)
-    end
-  end
-
-  return out
+  return tbl.merge("force", tbl.deepcopy(base or {}), tbl.deepcopy(override or {}))
 end
 
-local current = clone(defaults)
+local current = tbl.deepcopy(defaults)
 
 ---@param opts? table
 ---@return Chord.Config
@@ -243,7 +218,7 @@ end
 
 ---@return Chord.Config
 function M.defaults()
-  return clone(defaults)
+  return tbl.deepcopy(defaults)
 end
 
 return M
