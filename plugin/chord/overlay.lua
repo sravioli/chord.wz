@@ -72,7 +72,7 @@ return function(core, command)
     end)
   end
 
-  ---Inject a trigger binding that opens the Chord help overlay.
+  ---Add a trigger binding that opens the Chord help overlay.
   ---@param config_table table
   ---@param opts? Chord.OverlayConfig
   ---@return table

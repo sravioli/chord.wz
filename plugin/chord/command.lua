@@ -253,7 +253,7 @@ return function(core)
     return nil
   end
 
-  ---Register an action-only command or a key-backed command.
+  ---Register either an action-only command or a key-backed command.
   ---@param spec Chord.CommandSpec
   ---@return Chord.Command|nil
   function command.register(spec)
@@ -264,7 +264,7 @@ return function(core)
     return cmd
   end
 
-  ---Register many commands.
+  ---Register multiple commands.
   ---@param specs Chord.CommandSpec[]
   ---@return nil
   function command.register_many(specs)
@@ -355,7 +355,7 @@ return function(core)
     end)
   end
 
-  ---Inject a trigger binding that opens the command picker.
+  ---Add a trigger binding that opens the command picker.
   ---@param config_table table
   ---@param opts? Chord.CommandOptions
   ---@return table
@@ -373,7 +373,7 @@ return function(core)
     return action
   end
 
-  ---Generate WezTerm augment-command-palette entries from Chord commands.
+  ---Build WezTerm command-palette entries from Chord commands.
   ---@param config_table table
   ---@param opts? Chord.CommandOptions
   ---@return Chord.CommandPaletteEntry[]
