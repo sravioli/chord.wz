@@ -74,6 +74,28 @@ describe("chord hints", function()
 
   it("returns an action callback that pages hints", function()
     local win, pane = window()
+    local config = {}
+    chord.tables(config, {
+      mode = {
+        meta = { i = "M", txt = "MODE", bg = "#111" },
+        keys = {
+          { "a", "alpha", "alpha" },
+          { "b", "bravo", "bravo" },
+        },
+      },
+    })
+    local opts = {
+      theme = {
+        foreground = "#fff",
+        brights = { "#555" },
+        tab_bar = { background = "#000" },
+      },
+      mode_bg = "#f00",
+    }
+
+    local first_page = chord.hint_layout(config, "mode", 12, win, opts):format()
+    assert.truthy(first_page:find("[1/2]", 1, true))
+
     local action = chord.hint_action("mode", 1)
     assert.equal("action_callback", action.__type)
 
@@ -81,6 +103,8 @@ describe("chord hints", function()
 
     local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
     assert.equal(2, memo.cache.get(chord.__hint_var(10, 20, "mode")))
+    local second_page = chord.hint_layout(config, "mode", 12, win, opts):format()
+    assert.truthy(second_page:find("[2/2]", 1, true))
     assert.equal("", win.right_status)
   end)
 end)

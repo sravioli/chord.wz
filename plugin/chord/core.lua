@@ -1034,7 +1034,7 @@ function M.hint_action(name, direction)
     local page = (type(current) == "number") and current or 1
 
     page = math.max(1, page + direction)
-    cache.set(var_key, page)
+    cache.set(var_key, page, { force = true })
     window:set_right_status ""
   end)
 end
