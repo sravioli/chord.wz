@@ -343,6 +343,7 @@ each key table independently.
 | Function                          | Description                                      |
 | --------------------------------- | ------------------------------------------------ |
 | `setup(opts?)`                    | Merge user options with defaults.                |
+| `config()`                        | Return the current Chord configuration.          |
 | `validate(lhs)`                   | Validate Vim-style key notation.                 |
 | `normalize(lhs)`                  | Convert Vim-style notation to `{ key, mods }`.   |
 | `key(lhs_or_spec, action?, desc?)`| Build one WezTerm key entry.                     |
