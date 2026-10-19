@@ -201,6 +201,10 @@ Add `hint_action()` bindings to page through long hint bars:
 { "<C-S-A-Right>", chord.hint_action(nil, 1), "" },
 ```
 
+Paging stops at the first and last pages; extra keypresses do not accumulate.
+Page limits follow the most recently rendered hints for each window, pane and
+key table, and resizing clamps the stored page to the new range.
+
 ### Temporary picker tables
 
 Hosts can opt arbitrary pickers into the same notation, styled hints, width

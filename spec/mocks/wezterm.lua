@@ -16,8 +16,10 @@ local memo = {
     get = function(key)
       return memo_store[key]
     end,
-    set = function(key, value)
-      memo_store[key] = value
+    set = function(key, value, opts)
+      if memo_store[key] == nil or (opts and opts.force) then
+        memo_store[key] = value
+      end
     end,
     clear = function()
       for key in pairs(memo_store) do

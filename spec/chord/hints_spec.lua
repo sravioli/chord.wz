@@ -32,6 +32,7 @@ describe("chord hints", function()
     chord.setup {
       log = { enabled = false },
     }
+    chord.apply_overrides({}, { enabled = { key_tables = false } })
     wezterm.plugin.require("https://github.com/sravioli/memo.wz").cache.clear()
   end)
 
@@ -282,4 +283,116 @@ describe("chord hints", function()
     assert.truthy(second_page:find("[2/2]", 1, true))
     assert.equal("", win.right_status)
   end)
+
+  for _, render in ipairs { "hint", "hint_layout" } do
+    describe(render .. " pagination boundaries", function()
+      local function render_hints(config, width, win, name)
+        if render == "hint" then
+          return chord.hint(config, name, width, win)
+        end
+        return chord
+          .hint_layout(config, name, width, win, {
+            theme = {
+              foreground = "#fff",
+              tab_bar = { background = "#000" },
+            },
+            mode_bg = "#f00",
+          })
+          :format()
+      end
+
+      local function paginated_config()
+        return {
+          key_tables = {
+            mode = {
+              { key = "a", desc = "alpha" },
+              { key = "b", desc = "bravo" },
+            },
+          },
+        }
+      end
+
+      it("blocks repeated forward presses and returns with one backward press", function()
+        local win, pane = window()
+        local config = paginated_config()
+        local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
+        local key = chord.__hint_var(10, 20, "mode")
+        local next_page = chord.hint_action(nil, 1)
+        local previous_page = chord.hint_action(nil, -1)
+
+        assert.truthy(render_hints(config, 12, win, "mode"):find("[1/2]", 1, true))
+        next_page.callback(win, pane)
+        assert.truthy(render_hints(config, 12, win, "mode"):find("[2/2]", 1, true))
+        for _ = 1, 5 do
+          next_page.callback(win, pane)
+          assert.equal(2, memo.cache.get(key))
+        end
+        previous_page.callback(win, pane)
+        assert.equal(1, memo.cache.get(key))
+        assert.truthy(render_hints(config, 12, win, "mode"):find("[1/2]", 1, true))
+        for _ = 1, 5 do
+          previous_page.callback(win, pane)
+        end
+        next_page.callback(win, pane)
+        assert.equal(2, memo.cache.get(key))
+      end)
+
+      it("persists clamped pages when resizing to fewer pages or no visible hints", function()
+        local win, pane = window()
+        local config = paginated_config()
+        local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
+        local key = chord.__hint_var(10, 20, "mode")
+
+        memo.cache.set(key, 99, { force = true })
+        assert.truthy(render_hints(config, 12, win, "mode"):find("[2/2]", 1, true))
+        assert.equal(2, memo.cache.get(key))
+        render_hints(config, 80, win, "mode")
+        assert.equal(1, memo.cache.get(key))
+        chord.hint_action(nil, 1).callback(win, pane)
+        assert.equal(1, memo.cache.get(key))
+        assert.truthy(render_hints(config, 12, win, "mode"):find("[1/2]", 1, true))
+
+        chord.hint_action(nil, 1).callback(win, pane)
+        render_hints(config, 0, win, "mode")
+        chord.hint_action(nil, 1).callback(win, pane)
+        assert.equal(1, memo.cache.get(key))
+        config.key_tables.mode = {}
+        render_hints(config, 12, win, "mode")
+        chord.hint_action(nil, 1).callback(win, pane)
+        assert.equal(1, memo.cache.get(key))
+      end)
+
+      it("keeps page limits isolated by pane and table", function()
+        local win, pane = window()
+        local config = paginated_config()
+        local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
+        render_hints(config, 12, win, "mode")
+        chord.hint_action(nil, 1).callback(win, pane)
+
+        win.active_key_table = function()
+          return nil
+        end
+        config.keys = { { key = "x", desc = "only" } }
+        render_hints(config, 80, win)
+        chord.hint_action(nil, 1).callback(win, pane)
+        assert.equal(1, memo.cache.get(chord.__hint_var(10, 20, nil)))
+        assert.equal(2, memo.cache.get(chord.__hint_var(10, 20, "mode")))
+
+        win.active_key_table = function()
+          return "mode"
+        end
+        win.active_pane = function()
+          return {
+            pane_id = function()
+              return 21
+            end,
+          }
+        end
+        render_hints(config, 80, win, "mode")
+        chord.hint_action(nil, 1).callback(win, pane)
+        assert.equal(1, memo.cache.get(chord.__hint_var(10, 21, "mode")))
+        assert.equal(2, memo.cache.get(chord.__hint_var(10, 20, "mode")))
+      end)
+    end)
+  end
 end)

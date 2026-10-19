@@ -223,7 +223,7 @@ describe("chord edge behavior", function()
     })
 
     local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
-    memo.cache.set(chord.__hint_var(10, 20, "__keys__"), 99)
+    memo.cache.set(chord.__hint_var(10, 20, "__keys__"), 99, { force = true })
 
     local rendered = chord.hint(config, nil, 14, win)
 

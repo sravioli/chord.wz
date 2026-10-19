@@ -941,24 +941,22 @@ local function current_page(entries, width_cols, window, name)
     end
   end
 
-  if pages == false then
-    return nil, "", 0
-  end
-  local total = #pages
-  if total == 0 then
-    return nil, "", 0
-  end
-  if total == 1 then
-    return pages[1], "", 0
-  end
-
+  local total = pages and #pages or 0
   local cache = deps.memo().cache
   local active_pane = window:active_pane()
   local var_key = M.__hint_var(window:window_id(), active_pane:pane_id(), name)
   local stored = cache.get(var_key)
   local page = (type(stored) == "number") and stored or 1
   page = math.max(1, math.min(page, total))
-  cache.set(var_key, page)
+  cache.set(var_key, page, { force = true })
+  cache.set("total_" .. var_key, total, { force = true })
+
+  if total == 0 then
+    return nil, "", 0
+  end
+  if total == 1 then
+    return pages[1], "", 0
+  end
 
   local indicator = sformat(" [%d/%d]", page, total)
   local pad = ind_w - width(indicator)
@@ -1160,10 +1158,13 @@ function M.hint_action(name, direction)
     local var_key = M.__hint_var(window:window_id(), pane_id, active_name)
     local current = cache.get(var_key)
     local page = (type(current) == "number") and current or 1
+    local total = cache.get("total_" .. var_key) or 1
 
-    page = math.max(1, page + direction)
+    page = math.max(1, math.min(page, total))
+    page = math.max(1, math.min(page + direction, total))
     cache.set(var_key, page, { force = true })
-    if not M.temporary.get(window)
+    if
+      not M.temporary.get(window)
       or not refresh_hints("chord-hint-page-changed", window, pane)
     then
       window:set_right_status ""
