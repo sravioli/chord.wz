@@ -26,11 +26,17 @@ local function window()
 end
 
 describe("chord hints", function()
+  local original_column_width = wezterm.column_width
+
   before_each(function()
     chord.setup {
       log = { enabled = false },
     }
     wezterm.plugin.require("https://github.com/sravioli/memo.wz").cache.clear()
+  end)
+
+  after_each(function()
+    wezterm.column_width = original_column_width
   end)
 
   describe("temporary picker hints", function()
@@ -125,13 +131,67 @@ describe("chord hints", function()
       local text = chord.hint_layout({}, "width_picker", 22, win, opts):format()
       assert.truthy(text:find("<A-x> dispatch", 1, true))
       assert.truthy(text:find("[1/2]", 1, true))
+      win.right_status = "existing status"
       chord.hint_action(nil, 1).callback(win, pane)
+      assert.equal("existing status", win.right_status)
       text = chord.hint_layout({}, "width_picker", 22, win, opts):format()
       assert.truthy(text:find("[2/2]", 1, true))
       assert.equal("chord-hint-page-changed", wezterm._emitted[#wezterm._emitted].name)
       win.active = "mode"
       assert.is_nil(chord.temporary.get(win, theme))
       release()
+    end)
+
+    it("reuses pagination for the same window, entries and width", function()
+      local win = picker_window(107, "cached")
+      local config = {
+        key_tables = {
+          cached = {
+            { key = "a", desc = "alpha action" },
+            { key = "b", desc = "bravo action" },
+            { key = "c", desc = "charlie action" },
+          },
+        },
+      }
+      local call_count = 0
+      local column_width = wezterm.column_width
+      wezterm.column_width = function(value)
+        call_count = call_count + 1
+        return column_width(value)
+      end
+
+      local first = chord.hint_layout(config, "cached", 18, win, opts):format()
+      local first_count = call_count
+      call_count = 0
+      local second = chord.hint_layout(config, "cached", 18, win, opts):format()
+      local cached_count = call_count
+      assert.equal(first, second)
+      assert.is_true(cached_count < first_count)
+
+      call_count = 0
+      chord.hint_layout(config, "cached", 20, win, opts):format()
+      assert.is_true(call_count > cached_count)
+
+      config.key_tables.cached = { { key = "z", desc = "new action" } }
+      local updated = chord.hint_layout(config, "cached", 20, win, opts):format()
+      assert.truthy(updated:find("new action", 1, true))
+
+      config.key_tables.cached[1].desc = "mutated action"
+      local mutated = chord.hint_layout(config, "cached", 20, win, opts):format()
+      assert.truthy(mutated:find("mutated action", 1, true))
+      wezterm.column_width = column_width
+    end)
+
+    it("does not retain disposed windows in pagination cache", function()
+      local config = { key_tables = { cached = { { key = "a", desc = "alpha" } } } }
+      local ref = setmetatable({}, { __mode = "v" })
+      do
+        local win = picker_window(108, "cached")
+        ref[1] = win
+        chord.hint_layout(config, "cached", 20, win, opts)
+      end
+      collectgarbage "collect"
+      assert.is_nil(ref[1])
     end)
 
     it("budgets pagination indicators when the page count gains a digit", function()

@@ -46,6 +46,7 @@ local M = {
 
 ---@type Chord.Logger
 local log
+local hint_page_cache = setmetatable({}, { __mode = "k" })
 
 ---@param s string
 ---@param pattern string
@@ -64,6 +65,7 @@ local function clear_caches()
   M._modes_cache_key = nil
   M._modes_cache = nil
   M._rev_aliases = nil
+  hint_page_cache = setmetatable({}, { __mode = "k" })
 end
 
 ---@return nil
@@ -85,6 +87,7 @@ local function refresh_hints(event, window, pane)
   if not ok then
     log:error("hint refresh failed: %s", err)
   end
+  return ok
 end
 
 ---Publish hints for an already registered, temporary native key table.
@@ -819,21 +822,48 @@ end
 ---@param entries table[]
 ---@return {lhs:string, desc:string}[]
 local function collect_raw(entries)
-  local raw = {}
+  local raw, signature = {}, {}
   for _, entry in ipairs(entries or {}) do
+    signature[#signature + 1] = {
+      entry = entry,
+      key = entry.key,
+      mods = entry.mods,
+      desc = entry.desc,
+    }
     if entry.desc and entry.desc ~= "" then
       raw[#raw + 1] = { lhs = M.__entry_lhs(entry), desc = entry.desc }
     end
   end
-  return raw
+  return raw, signature
+end
+
+---@param signature table[]
+---@param entries table[]
+---@return boolean
+local function matches_signature(signature, entries)
+  local index = 1
+  for _, entry in ipairs(entries or {}) do
+    local cached = signature[index]
+    if
+      not cached
+      or cached.entry ~= entry
+      or cached.key ~= entry.key
+      or cached.mods ~= entry.mods
+      or cached.desc ~= entry.desc
+    then
+      return false
+    end
+    index = index + 1
+  end
+  return signature[index] == nil
 end
 
 ---@param raw {lhs:string, desc:string}[]
 ---@param budget number
+---@param separator string
 ---@return {lhs:string, desc:string}[][]
-local function pack_pages(raw, budget)
-  local sep = config.get().hints.separator or " / "
-  local sep_w = width(sep)
+local function pack_pages(raw, budget, separator)
+  local sep_w = width(separator)
   if #raw == 0 then
     return {}
   end
@@ -866,34 +896,63 @@ end
 ---@return string
 ---@return integer
 local function current_page(entries, width_cols, window, name)
-  local cache = deps.memo().cache
-  local raw = collect_raw(entries)
+  local cached = hint_page_cache[window]
+  local pages, ind_w
+  local separator = config.get().hints.separator or " / "
+  if
+    cached
+    and cached.entries == entries
+    and cached.width == width_cols
+    and cached.separator == separator
+    and matches_signature(cached.signature, entries)
+  then
+    pages, ind_w = cached.pages, cached.indicator_width
+  else
+    local raw, signature = collect_raw(entries)
+    pages = pack_pages(raw, width_cols, separator)
+    ind_w = 0
 
-  local probe = pack_pages(raw, width_cols)
-  local total = #probe
+    if #pages > 1 then
+      local max_ind = sformat(" [%d/%d]", #pages, #pages)
+      ind_w = width(max_ind)
+      while true do
+        if ind_w > width_cols then
+          pages = false
+          ind_w = 0
+          break
+        end
+        pages = pack_pages(raw, width_cols - ind_w, separator)
+        local actual_ind_w = width(sformat(" [%d/%d]", #pages, #pages))
+        if actual_ind_w <= ind_w then
+          break
+        end
+        ind_w = actual_ind_w
+      end
+    end
+    if window then
+      hint_page_cache[window] = {
+        entries = entries,
+        width = width_cols,
+        separator = separator,
+        signature = signature,
+        pages = pages,
+        indicator_width = ind_w,
+      }
+    end
+  end
+
+  if pages == false then
+    return nil, "", 0
+  end
+  local total = #pages
   if total == 0 then
     return nil, "", 0
   end
   if total == 1 then
-    return probe[1], "", 0
+    return pages[1], "", 0
   end
 
-  local max_ind = sformat(" [%d/%d]", total, total)
-  local ind_w = width(max_ind)
-  local pages
-  while true do
-    if ind_w > width_cols then
-      return nil, "", 0
-    end
-    pages = pack_pages(raw, width_cols - ind_w)
-    total = #pages
-    local actual_ind_w = width(sformat(" [%d/%d]", total, total))
-    if actual_ind_w <= ind_w then
-      break
-    end
-    ind_w = actual_ind_w
-  end
-
+  local cache = deps.memo().cache
   local active_pane = window:active_pane()
   local var_key = M.__hint_var(window:window_id(), active_pane:pane_id(), name)
   local stored = cache.get(var_key)
@@ -1104,9 +1163,10 @@ function M.hint_action(name, direction)
 
     page = math.max(1, page + direction)
     cache.set(var_key, page, { force = true })
-    window:set_right_status ""
-    if M.temporary.get(window) then
-      refresh_hints("chord-hint-page-changed", window, pane)
+    if not M.temporary.get(window)
+      or not refresh_hints("chord-hint-page-changed", window, pane)
+    then
+      window:set_right_status ""
     end
   end)
 end
