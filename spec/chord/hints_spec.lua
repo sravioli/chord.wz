@@ -33,6 +33,121 @@ describe("chord hints", function()
     wezterm.plugin.require("https://github.com/sravioli/memo.wz").cache.clear()
   end)
 
+  describe("temporary picker hints", function()
+    local theme = {
+      foreground = "#fff",
+      brights = { "#555" },
+      tab_bar = { background = "#000" },
+    }
+    local opts = { theme = theme, mode_bg = "#f00" }
+
+    local function picker_window(id, name)
+      local win, pane = window()
+      win.window_id = function()
+        return id
+      end
+      win.active = name
+      win.active_key_table = function(self)
+        return self.active
+      end
+      return win, pane
+    end
+
+    local function definition(name, label)
+      return {
+        name = name,
+        meta = function(t)
+          return { i = "P", txt = "PICKER", bg = t.foreground }
+        end,
+        keys = {
+          { "<M-x>", "dispatch", label or "dispatch" },
+          { "<ESC>", "cancel", "cancel" },
+        },
+      }
+    end
+
+    it("isolates arbitrary table names by window without replacing modal definitions", function()
+      local config = {}
+      chord.tables(config, {
+        mode = {
+          meta = { i = "M", txt = "MODE", bg = "#111" },
+          keys = {
+            { "a", "alpha", "alpha" },
+          },
+        },
+      })
+      local a, pane = picker_window(101, "custom_picker")
+      local b = picker_window(102, "custom_picker")
+      local normal = picker_window(103, "mode")
+      local before = chord.hint_layout(config, "mode", 30, normal, opts):format()
+      local release_a = chord.temporary.begin(a, pane, definition("custom_picker", "first"))
+      local release_b = chord.temporary.begin(b, pane, definition("custom_picker", "second"))
+      assert.equal("#fff", chord.temporary.get(a, theme).meta.bg)
+      assert.truthy(
+        chord.hint_layout(config, "custom_picker", 40, a, opts):format():find("first", 1, true)
+      )
+      assert.truthy(
+        chord.hint_layout(config, "custom_picker", 40, b, opts):format():find("second", 1, true)
+      )
+      assert.same(before, chord.hint_layout(config, "mode", 30, normal, opts):format())
+      assert.is_nil(chord.get_modes(theme).custom_picker)
+      release_a()
+      assert.is_nil(chord.temporary.get(a, theme))
+      assert.is_not_nil(chord.temporary.get(b, theme))
+      release_b()
+    end)
+
+    it("resets pagination on reopen and ignores stale or repeated releases", function()
+      local win, pane = picker_window(104, "reopened")
+      local old = chord.temporary.begin(win, pane, definition "reopened")
+      chord.hint_action(nil, 1).callback(win, pane)
+      local current = chord.temporary.begin(win, pane, definition("reopened", "new action"))
+      local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
+      assert.equal(1, memo.cache.get(chord.__hint_var(104, 20, "reopened")))
+      old()
+      assert.is_not_nil(chord.temporary.get(win, theme))
+      local count = #wezterm._emitted
+      current()
+      current()
+      assert.equal(count + 1, #wezterm._emitted)
+      assert.equal("chord-temporary-changed", wezterm._emitted[#wezterm._emitted].name)
+      assert.is_nil(chord.temporary.get(win, theme))
+    end)
+
+    it("uses existing notation, formatting and pagination within every width budget", function()
+      local win, pane = picker_window(105, "width_picker")
+      local release = chord.temporary.begin(win, pane, definition "width_picker")
+      for width = 0, 100 do
+        local text = chord.hint_layout({}, "width_picker", width, win, opts):format()
+        assert.is_true(wezterm.column_width(text) <= width, "layout width " .. width)
+        assert.equal(width, wezterm.column_width(chord.hint({}, "width_picker", width, win)))
+      end
+      local text = chord.hint_layout({}, "width_picker", 22, win, opts):format()
+      assert.truthy(text:find("<A-x> dispatch", 1, true))
+      assert.truthy(text:find("[1/2]", 1, true))
+      chord.hint_action(nil, 1).callback(win, pane)
+      text = chord.hint_layout({}, "width_picker", 22, win, opts):format()
+      assert.truthy(text:find("[2/2]", 1, true))
+      assert.equal("chord-hint-page-changed", wezterm._emitted[#wezterm._emitted].name)
+      win.active = "mode"
+      assert.is_nil(chord.temporary.get(win, theme))
+      release()
+    end)
+
+    it("budgets pagination indicators when the page count gains a digit", function()
+      local win, pane = picker_window(106, "many_pages")
+      local def = definition "many_pages"
+      for i = 1, 12 do
+        def.keys[i] = { tostring(i), "action", "description" }
+      end
+      local release = chord.temporary.begin(win, pane, def)
+      for width = 0, 160 do
+        assert.is_true(#chord.hint_layout({}, def.name, width, win, opts):format() <= width)
+      end
+      release()
+    end)
+  end)
+
   it("renders fixed-width plain hints", function()
     local config = {}
     chord.maps(config, {

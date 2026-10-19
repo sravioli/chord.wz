@@ -77,6 +77,59 @@ end
 
 refresh_config_refs()
 
+local temporary = {}
+M.temporary = {}
+
+local function refresh_hints(event, window, pane)
+  local ok, err = pcall(wezterm.emit, event, window, pane)
+  if not ok then
+    log:error("hint refresh failed: %s", err)
+  end
+end
+
+---Publish hints for an already registered, temporary native key table.
+---This does not activate/pop tables or register event handlers.
+---The returned release function is idempotent and cannot release a newer session.
+---@param window any
+---@param pane any
+---@param def { name: string, keys: table[], meta: Chord.KeyMeta|function }
+---@return function release
+function M.temporary.begin(window, pane, def)
+  local wid = window:window_id()
+  local session = { name = def.name, keys = M.table(def.keys), meta = def.meta }
+  local active_pane = window:active_pane() or pane
+  if active_pane then
+    deps.memo().cache.set(M.__hint_var(wid, active_pane:pane_id(), def.name), 1, { force = true })
+  end
+  temporary[wid] = session
+  refresh_hints("chord-temporary-changed", window, pane)
+  return function()
+    if temporary[wid] == session then
+      temporary[wid] = nil
+      refresh_hints("chord-temporary-changed", window, pane)
+    end
+  end
+end
+
+---Resolve only the temporary table currently active in this window.
+---@param window any
+---@param theme? table
+---@return table|nil
+function M.temporary.get(window, theme)
+  local session = temporary[window:window_id()]
+  if session and window:active_key_table() == session.name then
+    local meta = session.meta
+    if type(meta) == "function" then
+      meta = theme and meta(theme) or nil
+    end
+    return {
+      name = session.name,
+      keys = session.keys,
+      meta = meta,
+    }
+  end
+end
+
 ---@param opts? table
 ---@return Chord
 function M.setup(opts)
@@ -827,9 +880,19 @@ local function current_page(entries, width_cols, window, name)
 
   local max_ind = sformat(" [%d/%d]", total, total)
   local ind_w = width(max_ind)
-
-  local pages = pack_pages(raw, width_cols - ind_w)
-  total = #pages
+  local pages
+  while true do
+    if ind_w > width_cols then
+      return nil, "", 0
+    end
+    pages = pack_pages(raw, width_cols - ind_w)
+    total = #pages
+    local actual_ind_w = width(sformat(" [%d/%d]", total, total))
+    if actual_ind_w <= ind_w then
+      break
+    end
+    ind_w = actual_ind_w
+  end
 
   local active_pane = window:active_pane()
   local var_key = M.__hint_var(window:window_id(), active_pane:pane_id(), name)
@@ -850,7 +913,11 @@ end
 ---@param config_table table
 ---@param name string|nil
 ---@return table[]
-local function resolve_entries(config_table, name)
+local function resolve_entries(config_table, name, window)
+  local session = window and M.temporary.get(window)
+  if session and session.name == name then
+    return session.keys
+  end
   local function has_descriptions(entries)
     for _, entry in ipairs(entries or {}) do
       if entry.desc and entry.desc ~= "" then
@@ -913,7 +980,8 @@ M.__resolve_entries = resolve_entries
 ---@param window table
 ---@return string
 function M.hint(config_table, name, width_cols, window)
-  local entries = resolve_entries(config_table, name)
+  width_cols = math.max(0, math.floor(width_cols))
+  local entries = resolve_entries(config_table, name, window)
   local items, indicator, ind_w = current_page(entries, width_cols, window, name)
 
   if not items then
@@ -955,6 +1023,7 @@ end
 ---@param opts table
 ---@return table
 function M.hint_layout(config_table, name, width_cols, window, opts)
+  width_cols = math.max(0, math.floor(width_cols))
   local ribbon = deps.ribbon()
   local theme = opts.theme
   local mode_bg = tostring(opts.mode_bg)
@@ -962,7 +1031,7 @@ function M.hint_layout(config_table, name, width_cols, window, opts)
   local fg = tostring(theme.foreground)
   local dim_fg = theme.brights and tostring(theme.brights[1]) or fg
   local layout = ribbon:new("HintBar", true)
-  local entries = resolve_entries(config_table, name)
+  local entries = resolve_entries(config_table, name, window)
   local items, indicator, ind_w = current_page(entries, width_cols, window, name)
 
   if not items then
@@ -1036,6 +1105,9 @@ function M.hint_action(name, direction)
     page = math.max(1, page + direction)
     cache.set(var_key, page, { force = true })
     window:set_right_status ""
+    if M.temporary.get(window) then
+      refresh_hints("chord-hint-page-changed", window, pane)
+    end
   end)
 end
 

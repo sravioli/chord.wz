@@ -4,6 +4,11 @@ wezterm.GLOBAL = {}
 wezterm._logs = {}
 wezterm._default_keys = {}
 wezterm._format_calls = {}
+wezterm._emitted = {}
+
+function wezterm.emit(name, window, pane)
+  wezterm._emitted[#wezterm._emitted + 1] = { name = name, window = window, pane = pane }
+end
 
 local memo_store = {}
 local memo = {

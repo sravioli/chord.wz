@@ -201,6 +201,53 @@ Add `hint_action()` bindings to page through long hint bars:
 { "<C-S-A-Right>", chord.hint_action(nil, 1), "" },
 ```
 
+### Temporary picker tables
+
+Hosts can opt arbitrary pickers into the same notation, styled hints, width
+budgeting and pagination without replacing the definitions registered with
+`chord.tables()`:
+
+```lua
+local release = chord.temporary.begin(window, pane, {
+  name = "custom_picker",
+  keys = described_native_bindings, -- or Chord tuples accepted by chord.table()
+  meta = function(theme)
+    return { i = "P", txt = "PICKER", bg = theme.ansi[5] }
+  end,
+})
+
+-- In the enabled status renderer:
+local temporary = chord.temporary.get(window, theme)
+local name = temporary and temporary.name or window:active_key_table()
+local meta = temporary and temporary.meta or chord.get_modes(theme)[name]
+if meta then
+  local hint = chord.hint_layout(config, name, remaining_columns, window, {
+    theme = theme,
+    mode_bg = meta.bg,
+  })
+end
+
+-- On every close/error/prompt transition, before dispatching an action:
+release()
+```
+
+`begin()` publishes hints, resets pagination and returns an idempotent release
+function. It does **not** register, activate or pop native key tables: the
+picker owns that lifecycle. Names may be customized; sessions are isolated
+by window, and an old release cannot remove a newer session. `get()` returns
+only the session whose table is currently active; metadata may be a table or
+a theme function. Calling it without a theme retrieves bindings/name without
+evaluating a metadata function.
+
+The host must supply the same described bindings that implement its actions,
+install paging keys in the picker table, and release on all exit paths.
+Refresh the status renderer on `chord-temporary-changed` (begin/release) and
+`chord-hint-page-changed` (temporary-table pagination). Neither event handler
+is installed by this API, so repeated adapter setup adds no registrations.
+Chord never enables a status bar or changes its layout. With no visible bar,
+or no host adapter, no temporary hints are shown. Extremely narrow budgets
+can show only a page indicator or nothing, never overflow.
+
 ## Command picker
 
 Chord can open a searchable picker backed by your keybindings. It discovers
