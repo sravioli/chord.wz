@@ -176,6 +176,29 @@ describe("chord edge behavior", function()
     assert.equal(rendered, cached)
   end)
 
+  it("reuses hint pages across fresh window objects with the same id", function()
+    local config = {}
+    chord.tables(config, {
+      mode = { keys = { { "a", "alpha", "alpha" }, { "b", "bravo", "bravo" } } },
+    })
+    local wezterm = require "wezterm"
+    local measure = wezterm.column_width
+    local calls = 0
+    wezterm.column_width = function(s)
+      calls = calls + 1
+      return measure(s)
+    end
+    -- WezTerm hands each event a new window object for the same window.
+    chord.hint(config, "mode", 80, window "mode")
+    local cold = calls
+    calls = 0
+    local rendered = chord.hint(config, "mode", 80, window "mode")
+    local warm = calls
+    wezterm.column_width = measure
+    assert.truthy(rendered:find("a alpha", 1, true))
+    assert.is_true(warm < cold, ("warm %d >= cold %d"):format(warm, cold))
+  end)
+
   it("caches modes per theme and skips definitions without metadata", function()
     local config = {}
     chord.tables(config, {
