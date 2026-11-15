@@ -391,9 +391,9 @@ From the repository root, with Lua 5.4 and the named tools installed:
 
 ```sh
 busted --verbose
-luacheck plugin
+luacheck plugin spec
 selene --display-style=quiet plugin
-stylua --check .
+stylua --check plugin spec
 ```
 
 Specs mock WezTerm and dependencies, and cover hint budgets and picker lifecycle.
