@@ -52,9 +52,9 @@ You need:
 3. To test the plugin locally, point your WezTerm config at the checkout:
 
    ```lua
-   local chord = wezterm.plugin.require(
-     "file:///" .. wezterm.config_dir .. "/plugins/chord.wz"
-   )
+   local root = wezterm.home_dir .. "/path/to/chord.wz/plugin/"
+   package.path = root .. "?.lua;" .. root .. "?/init.lua;" .. package.path
+   local chord = require "chord.api"
    ```
 
 4. Run the checks to confirm the setup works:
