@@ -2,6 +2,25 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [1.2.0](https://github.com/sravioli/chord.wz/compare/9850ff5c84cf5c8f45bf2ebc88e19affa4118128..1.2.0) - 2026-11-15
+#### Features
+- (**chord**) add temporary picker hints - ([5e7e9ee](https://github.com/sravioli/chord.wz/commit/5e7e9ee1047a9ac649de0f4336c9deb18fbecb80)) - sravioli
+#### Bug Fixes
+- (**hints**) clamp pagination at page boundaries - ([4c2d418](https://github.com/sravioli/chord.wz/commit/4c2d41874969bec9c9cbbd074202eb1583d19a39)) - sravioli
+- (**hints**) persist page changes - ([9850ff5](https://github.com/sravioli/chord.wz/commit/9850ff5c84cf5c8f45bf2ebc88e19affa4118128)) - sravioli
+#### Performance Improvements
+- (**bootstrap**) keep plugin list across reloads - ([6bcbcc1](https://github.com/sravioli/chord.wz/commit/6bcbcc1631648e7c813478e92dbb352c4aa5fc87)) - sravioli
+- (**bootstrap**) share plugin discovery snapshot - ([5ce1f67](https://github.com/sravioli/chord.wz/commit/5ce1f676f55643e4c565eff7ef32dc3af2480328)) - sravioli
+- (**hints**) key page cache by window id - ([1ba1070](https://github.com/sravioli/chord.wz/commit/1ba1070a2f5bfcabbc7face80cda3e8b275b0875)) - sravioli
+- (**hints**) cache Chord pagination layouts - ([00e56ff](https://github.com/sravioli/chord.wz/commit/00e56ff62519d4f21aac9bffaea312c1a39ff929)) - sravioli
+#### Documentation
+- (**readme**) update plugin READMEs - ([5e21835](https://github.com/sravioli/chord.wz/commit/5e21835f2bf47835770262349bf5f940d7bb5f62)) - sravioli
+- document Chord config accessor - ([9aafb02](https://github.com/sravioli/chord.wz/commit/9aafb02017a2448ceb057f2aa82d1befff937f36)) - sravioli
+#### Tests
+- (**hints**) cover page cache across windows - ([80df9e4](https://github.com/sravioli/chord.wz/commit/80df9e46523354e66aad7c75eca81f79e05db166)) - sravioli
+
+- - -
+
 ## [1.1.0](https://github.com/sravioli/chord.wz/compare/4a14c582b2d098e46d6e3fe82aaca503b96002c0..1.1.0) - 2026-05-14
 #### Bug Fixes
 - (**picker**) reset styled choice labels - ([8774f2b](https://github.com/sravioli/chord.wz/commit/8774f2b5a0c7eeb02b5210f316a3043581e7b896)) - sravioli
