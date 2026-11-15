@@ -46,7 +46,9 @@ local M = {
 
 ---@type Chord.Logger
 local log
-local hint_page_cache = setmetatable({}, { __mode = "k" })
+-- Keyed by window id: WezTerm passes a fresh window object to every event,
+-- so a cache keyed by the object itself would never hit.
+local hint_page_cache = {}
 
 ---@param s string
 ---@param pattern string
@@ -65,7 +67,7 @@ local function clear_caches()
   M._modes_cache_key = nil
   M._modes_cache = nil
   M._rev_aliases = nil
-  hint_page_cache = setmetatable({}, { __mode = "k" })
+  hint_page_cache = {}
 end
 
 ---@return nil
@@ -896,7 +898,8 @@ end
 ---@return string
 ---@return integer
 local function current_page(entries, width_cols, window, name)
-  local cached = hint_page_cache[window]
+  local wid = window and window:window_id()
+  local cached = wid and hint_page_cache[wid]
   local pages, ind_w
   local separator = config.get().hints.separator or " / "
   if
@@ -929,8 +932,8 @@ local function current_page(entries, width_cols, window, name)
         ind_w = actual_ind_w
       end
     end
-    if window then
-      hint_page_cache[window] = {
+    if wid then
+      hint_page_cache[wid] = {
         entries = entries,
         width = width_cols,
         separator = separator,
