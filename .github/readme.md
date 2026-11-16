@@ -13,7 +13,47 @@ Keep actions and descriptions together, then reuse them in key tables,
 searchable pickers, and your status renderer. Native WezTerm entries can live
 alongside compact mappings, and user overrides can change either form.
 
-[Quick start](#quick-start) · [Usage](#usage) · [Configuration](#configuration) · [API reference](#api-reference) · [Troubleshooting](#troubleshooting) · [Development](#development) · [License](#license)
+[Showcase](#showcase) · [Quick start](#quick-start) · [Usage](#usage) · [Configuration](#configuration) · [API reference](#api-reference) · [Troubleshooting](#troubleshooting) · [Development](#development) · [License](#license)
+
+## Showcase
+
+The bars are [mosaic.wz](https://github.com/sravioli/mosaic.wz) with `chord.mode` and `chord.hints`. The screenshots show [kanagawa-wave](https://github.com/kanagawa-community/wezterm) (dark) and [kanagawa-lotus](https://github.com/kanagawa-community/wezterm) (light), in Fira Code Nerd Font.
+
+### `chord.command.action()`
+
+Registered commands and key-table bindings in one searchable list, with a colored badge per mode.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/command/light.png">
+  <img src="assets/command/dark.png" alt="The command picker" width="830">
+</picture>
+
+### `chord.overlay.action()`
+
+The same list as a help overlay for your mappings and modes.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/help/light.png">
+  <img src="assets/help/dark.png" alt="The help overlay" width="830">
+</picture>
+
+### `chord.mode + chord.hints`
+
+The active mode as a pill, and its keys paged beside it. Copy mode is built into WezTerm.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/mode_copy/light.png">
+  <img src="assets/mode_copy/dark.png" alt="The copy mode bar" width="1400">
+</picture>
+
+### `chord.mode + chord.hints`
+
+Search mode is built into WezTerm too, and gets the same pill and hints.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="assets/mode_search/light.png">
+  <img src="assets/mode_search/dark.png" alt="The search mode bar" width="1400">
+</picture>
 
 ## Quick start
 
