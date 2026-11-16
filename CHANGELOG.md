@@ -2,6 +2,23 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [1.3.0](https://github.com/sravioli/chord.wz/compare/a71d54032294f103256c5b63991eb46b9a2183b7..1.3.0) - 2026-11-16
+#### Features
+- (**mosaic**) add the chord mode and hints modules - ([0dc94e8](https://github.com/sravioli/chord.wz/commit/0dc94e87d04ebfb6593dab7b327ffd831ac87ac8)) - sravioli
+#### Documentation
+- (**contributing**) document the signed-commit requirement - ([c52509d](https://github.com/sravioli/chord.wz/commit/c52509d10f91551ae36d3100bcdf627bf4bc90f7)) - sravioli
+- (**contributing**) unify guides and templates - ([a71d540](https://github.com/sravioli/chord.wz/commit/a71d54032294f103256c5b63991eb46b9a2183b7)) - sravioli
+- (**readme**) unify badge style and add release badge - ([ce288ad](https://github.com/sravioli/chord.wz/commit/ce288ad74ed0e427dc3dd39e19bb5b5e8fe3a1c4)) - sravioli
+- (**readme**) align checks section - ([7000462](https://github.com/sravioli/chord.wz/commit/70004625e4f59abcbf95bc0ebb73d75151348d86)) - sravioli
+- document working-tree local checkout setup - ([2da1d52](https://github.com/sravioli/chord.wz/commit/2da1d52623e032c28d8989a844cfea36351b88d3)) - sravioli
+#### Continuous Integration
+- build the API reference from a majority of three LuaLS runs - ([189fe19](https://github.com/sravioli/chord.wz/commit/189fe190ef3c464eeb18611397b48a77e868f89d)) - sravioli
+- update the actions to the versions Dependabot proposed - ([3bd292a](https://github.com/sravioli/chord.wz/commit/3bd292a42b5e42cd6f789e3c5ae7f133dc1cb49a)) - sravioli
+- pin StyLua to 2.6.0 - ([f519095](https://github.com/sravioli/chord.wz/commit/f51909504908b2f4824e7dfd8ad825f0577c1554)) - sravioli
+- fix the flaky API check and the EditorConfig rate limit - ([812b062](https://github.com/sravioli/chord.wz/commit/812b0627f869f45eb0592b2c4818cd7603aafb59)) - sravioli
+
+- - -
+
 ## [1.2.0](https://github.com/sravioli/chord.wz/compare/9850ff5c84cf5c8f45bf2ebc88e19affa4118128..1.2.0) - 2026-11-15
 #### Features
 - (**chord**) add temporary picker hints - ([5e7e9ee](https://github.com/sravioli/chord.wz/commit/5e7e9ee1047a9ac649de0f4336c9deb18fbecb80)) - sravioli
