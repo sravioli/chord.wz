@@ -32,8 +32,10 @@ jobs:
           echo "LATEST_TAG=$latest_tag" >> "$GITHUB_ENV"
 
       - name: SemVer release
-        uses: cocogitto/cocogitto-action@v3.11
+        uses: cocogitto/cocogitto-action@v4
         id: release
+        with:
+          command: check
 
       - name: Generate changelog
         run: >-
