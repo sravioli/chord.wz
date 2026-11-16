@@ -24,7 +24,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Install Cocogitto
-        uses: cocogitto/cocogitto-action@v3.11
+        uses: cocogitto/cocogitto-action@v4
         with:
           check: false
 
