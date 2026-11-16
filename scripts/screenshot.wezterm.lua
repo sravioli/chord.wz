@@ -126,7 +126,8 @@ local tables = {}
 for name in pairs(modes) do
   tables[name] = true
 end
-local commands = chord.command.action(config, { title = "Chord commands", sources = sources, tables = tables })
+local commands =
+  chord.command.action(config, { title = "Chord commands", sources = sources, tables = tables })
 local help = chord.overlay.action(config, { title = "Chord help", sources = sources })
 
 if bar_only then
@@ -143,19 +144,28 @@ end)
 
 -- Pane content that stays open: fastfetch with a config that prints a logo and
 -- colour blocks only, so nothing about the machine the shots are taken on shows.
-local demo = { "sh", "-c", ("fastfetch -c %q; exec sleep 100000"):format(repo .. "/scripts/fastfetch.jsonc") }
+local demo =
+  { "sh", "-c", ("fastfetch -c %q; exec sleep 100000"):format(repo .. "/scripts/fastfetch.jsonc") }
 
 -- scene name -> function(window, pane) that opens it.
 local scenes = {
-  command = function(w, p) w:perform_action(commands, p) end,
-  help = function(w, p) w:perform_action(help, p) end,
+  command = function(w, p)
+    w:perform_action(commands, p)
+  end,
+  help = function(w, p)
+    w:perform_action(help, p)
+  end,
   -- The modes' hints fill the bar. Copy and search are WezTerm's own modes.
-  mode_copy = function(w, p) w:perform_action(act.ActivateCopyMode, p) end,
-  mode_search = function(w, p) w:perform_action(act.Search "CurrentSelectionOrEmptyString", p) end,
+  mode_copy = function(w, p)
+    w:perform_action(act.ActivateCopyMode, p)
+  end,
+  mode_search = function(w, p)
+    w:perform_action(act.Search "CurrentSelectionOrEmptyString", p)
+  end,
 }
 
 wezterm.on("gui-startup", function()
-  local tab, pane, window = wezterm.mux.spawn_window({ args = demo, cwd = wezterm.home_dir })
+  local tab, pane, window = wezterm.mux.spawn_window { args = demo, cwd = wezterm.home_dir }
   tab:set_title "dotfiles"
   -- A split with some output behind the overlay, and two more tabs for the bar.
   if not bar_only then

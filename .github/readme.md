@@ -37,16 +37,16 @@ The same list as a help overlay for your mappings and modes.
   <img src="assets/help/dark.png" alt="The help overlay" width="830">
 </picture>
 
-### `chord.mode + chord.hints`
+### Copy mode
 
-The active mode as a pill, and its keys paged beside it. Copy mode is built into WezTerm.
+The active mode as a pill (`chord.mode`), and its keys paged beside it (`chord.hints`). Copy mode is built into WezTerm.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="assets/mode_copy/light.png">
   <img src="assets/mode_copy/dark.png" alt="The copy mode bar" width="1400">
 </picture>
 
-### `chord.mode + chord.hints`
+### Search mode
 
 Search mode is built into WezTerm too, and gets the same pill and hints.
 
