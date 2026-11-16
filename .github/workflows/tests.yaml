@@ -8,6 +8,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }} ${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -44,8 +47,9 @@ jobs:
       - name: Print coverage summary
         run: tail -n 15 luacov.report.out
 
+      # Coverage upload is informational; an outage at Coveralls must not fail CI.
       - name: Submit to Coveralls
-        if: success() && env.COVERALLS_REPO_TOKEN != ''
+        continue-on-error: true
         run: luacov-coveralls --service-name github-actions --verbose
         env:
           COVERALLS_REPO_TOKEN: ${{ github.token }}

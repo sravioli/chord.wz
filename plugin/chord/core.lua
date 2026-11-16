@@ -23,6 +23,8 @@ local tconcat = table.concat
 ---@alias Chord.KeyTableDefFn fun(theme: table): Chord.KeyTableDef
 
 ---@class Chord
+---@field command Chord.CommandApi Command picker and palette entries.
+---@field overlay Chord.OverlayApi Grouped key help.
 local M = {
   ---@type table<string, string>
   aliases = {},
@@ -82,6 +84,8 @@ end
 refresh_config_refs()
 
 local temporary = {}
+---Hints for temporary native key tables.
+---@class Chord.Temporary
 M.temporary = {}
 
 local function refresh_hints(event, window, pane)
@@ -1280,10 +1284,14 @@ function M.conflicts(config_table, opts)
   return out
 end
 
+---A key table definition that can build its own activation binding.
 ---@class Chord.Mode
 ---@field __chord_mode boolean
 ---@field name string
 ---@field def Chord.KeyTableDef|Chord.KeyTableDefFn
+-- luacheck: push ignore 631 (a ---@field description must stay on one line)
+---@field activate fun(self: Chord.Mode, lhs: string|table, desc?: string, opts?: Chord.ModeActivateOptions): table|nil Build a key binding that activates this mode. Does not register the key table.
+-- luacheck: pop
 
 ---@class Chord.ModeActivateOptions
 ---@field one_shot? boolean
