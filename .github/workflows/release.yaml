@@ -34,6 +34,8 @@ jobs:
       - name: SemVer release
         uses: cocogitto/cocogitto-action@v4
         id: release
+        with:
+          command: check
 
       - name: Generate changelog
         run: >-
