@@ -1,11 +1,11 @@
-# chord.wz
+# chord.wz [![Release](https://img.shields.io/github/v/release/sravioli/chord.wz?style=flat&label=Release&logo=github)](https://github.com/sravioli/chord.wz/releases/latest)
 
 [![Awesome](https://awesome.re/mentioned-badge.svg)](https://github.com/michaelbrusegard/awesome-wezterm)
-[![Tests](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/tests.yaml?style=flat-square&label=tests)](https://github.com/sravioli/chord.wz/actions/workflows/tests.yaml)
-[![Lint](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/lint.yaml?style=flat-square&label=lint)](https://github.com/sravioli/chord.wz/actions/workflows/lint.yaml)
-[![Coverage](https://img.shields.io/coverallsCoverage/github/sravioli/chord.wz?label=Coverage&logo=coveralls)](https://coveralls.io/github/sravioli/chord.wz)
-[![Code license](https://img.shields.io/badge/code-GPL--2.0-blue?style=flat-square)](../LICENSE)
-[![Docs license](https://img.shields.io/badge/docs-CC_BY--NC_4.0-blue?style=flat-square)](../LICENSE-DOCS)
+[![Tests](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/tests.yaml?style=flat&label=Tests&logo=githubactions)](https://github.com/sravioli/chord.wz/actions/workflows/tests.yaml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/sravioli/chord.wz/lint.yaml?style=flat&label=Lint&logo=githubactions)](https://github.com/sravioli/chord.wz/actions/workflows/lint.yaml)
+[![Coverage](https://img.shields.io/coverallsCoverage/github/sravioli/chord.wz?style=flat&label=Coverage&logo=coveralls)](https://coveralls.io/github/sravioli/chord.wz)
+[![Code license](https://img.shields.io/badge/Code-GPL--2.0-blue?style=flat&logo=gnu)](../LICENSE)
+[![Docs license](https://img.shields.io/badge/Docs-CC_BY--NC_4.0-blue?style=flat&logo=creativecommons)](../LICENSE-DOCS)
 
 Vim-style mappings, modal hints, and command discovery for [WezTerm](https://wezterm.org/).
 
@@ -335,6 +335,36 @@ as read-only. Both hint renderers need a live window with an active pane.
 | `chord.command.palette(config, options?) → table[]` | Build `{ brief, action, icon? }` entries; caller registers `augment-command-palette`. |
 | `chord.overlay.action(config, options?) → KeyAssignment` | Build a grouped-help selector action. |
 | `chord.overlay.apply(config, options?) → KeyAssignment` | Append its trigger and return the help action. |
+
+## mosaic integration
+
+chord ships two modules for the [mosaic.wz](https://github.com/sravioli/mosaic.wz)
+status bar. mosaic reads them only when a layout names them, so they cost
+nothing otherwise:
+
+| Module | Shows |
+|---|---|
+| `chord.mode` | A pill with the active mode's (or temporary mode's) icon and name, in its `meta.bg` colour. |
+| `chord.hints` | The active key table's hints, paged with `chord.hint_action`, filling the space left on its side. |
+
+```lua
+mosaic.setup {
+  preset = "powerline",
+  -- Fill the preset's slots…
+  modules = { mode = "chord.mode", hints = "chord.hints" },
+  -- …or name the modules in your own layout:
+  -- layout = { left = { "chord.mode" }, right = { "chord.hints" } },
+  options = {
+    ["chord.hints"] = {
+      -- Optional: shown while the leader is held and no key table is active.
+      leader = function(width, theme) return { { Text = "leader hints" } } end,
+    },
+  },
+}
+```
+
+mosaic refreshes the bar on `chord-hint-page-changed` and
+`chord-temporary-changed`, so you don't need to wire those events yourself.
 
 ## Troubleshooting
 
