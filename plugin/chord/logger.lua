@@ -3,8 +3,7 @@
 local deps = require "chord.deps"
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
--- selene: allow(incorrect_standard_library_use)
-local unpack = unpack or table.unpack
+local unpack = table.unpack
 
 ---@class Chord.Logger
 ---@field tag string

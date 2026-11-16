@@ -1,27 +1,35 @@
-Thanks for contributing to chord.wz.
+## Summary
 
-This default template only points to the focused pull request templates. Please
-use the one that best matches your change:
+<!-- What changed in chord.wz and why. Link related issues: Fixes #123 -->
 
-- Feature:
-  - Template file:
-    https://github.com/sravioli/chord.wz/blob/main/.github/PULL_REQUEST_TEMPLATE/feature.md
-  - Query parameter: `?template=feature.md`
-- Bug fix:
-  - Template file:
-    https://github.com/sravioli/chord.wz/blob/main/.github/PULL_REQUEST_TEMPLATE/bug_fix.md
-  - Query parameter: `?template=bug_fix.md`
-- Documentation:
-  - Template file:
-    https://github.com/sravioli/chord.wz/blob/main/.github/PULL_REQUEST_TEMPLATE/documentation.md
-  - Query parameter: `?template=documentation.md`
+## Type
 
-To use one, reopen this pull request with the matching `?template=...` value in
-the URL and replace this placeholder body with the selected template.
+- [ ] Bug fix
+- [ ] Feature
+- [ ] Documentation
+- [ ] Other (refactor, CI, chore)
 
-Example:
+## Details
 
-```text
-https://github.com/sravioli/chord.wz/compare/<branch-name>?template=feature.md
-```
+<!--
+Fill in what applies, delete the rest.
+- Bug fix: smallest setup that reproduces it, and the root cause. Common areas:
+  key normalization, mode activation, command discovery, picker formatting, hint rendering, dependency loading.
+- Feature: API sketch and behavior, including defaults and failure cases.
+- Documentation: files and examples changed.
+-->
 
+## Compatibility
+
+- [ ] Non-breaking
+- [ ] Breaking (describe the migration path)
+
+## Checklist
+
+- [ ] Tests added or updated (bug fixes include a regression test), or not
+      applicable.
+- [ ] `.github/readme.md` and annotations updated for public API or default
+      changes.
+- [ ] Existing Vim-style mapping syntax still works.
+- [ ] The checks in the contributing guide pass, and commits follow
+      Conventional Commits.
