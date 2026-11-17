@@ -55,12 +55,13 @@ describe("chord logger", function()
 
     function external.new(tag, enabled)
       external.made = {
-        log = function(_, level, message)
+        -- Formats its arguments like log.wz's Log:log.
+        log = function(_, level, message, ...)
           events[#events + 1] = {
             tag = tag,
             enabled = enabled,
             level = level,
-            message = message,
+            message = message:format(...),
           }
         end,
       }

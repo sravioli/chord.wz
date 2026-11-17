@@ -223,6 +223,24 @@ describe("chord hints", function()
     assert.truthy(rendered:find("b beta", 1, true))
   end)
 
+  it("writes the page to GLOBAL only when it changes", function()
+    local config = {}
+    chord.maps(config, { { "a", "alpha", "alpha" } })
+    local cache = wezterm.plugin.require("https://github.com/sravioli/memo.wz").cache
+    local set = cache.set
+    local writes = 0
+    cache.set = function(...)
+      writes = writes + 1
+      return set(...)
+    end
+    chord.hint(config, nil, 20, window())
+    local first = writes
+    chord.hint(config, nil, 20, window())
+    cache.set = set
+    assert.is_true(first > 0)
+    assert.equal(first, writes)
+  end)
+
   it("renders ribbon hint layouts", function()
     local config = {}
     chord.tables(config, {

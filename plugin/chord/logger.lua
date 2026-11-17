@@ -3,28 +3,16 @@
 local deps = require "chord.deps"
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
-local unpack = table.unpack
-
 ---@class Chord.Logger
 ---@field tag string
 ---@field enabled boolean
 ---@field threshold integer
+---@field _external table|nil log.wz logger, when installed.
 local M = {}
 M.__index = M
 
-local levels = {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-}
-
-local level_names = {
-  [levels.DEBUG] = "debug",
-  [levels.INFO] = "info",
-  [levels.WARN] = "warn",
-  [levels.ERROR] = "error",
-}
+local levels = { DEBUG = 0, INFO = 1, WARN = 2, ERROR = 3 }
+local level_names = { [0] = "debug", [1] = "info", [2] = "warn", [3] = "error" }
 
 ---@param value any
 ---@return integer
@@ -41,55 +29,11 @@ local function stringify(value)
   if type(value) == "string" then
     return value
   end
-
-  if wezterm and type(wezterm.to_string) == "function" then
-    local ok, rendered = pcall(wezterm.to_string, value)
-    if ok then
-      return rendered
-    end
-  end
-
-  return tostring(value)
+  local ok, rendered = pcall(wezterm.to_string, value) ---@diagnostic disable-line: undefined-field
+  return ok and type(rendered) == "string" and rendered or tostring(value)
 end
 
----@param message any
----@param ... any
----@return string
-local function format_message(message, ...)
-  local count = select("#", ...)
-  if count == 0 then
-    return stringify(message)
-  end
-
-  local args = {}
-  for i = 1, count do
-    args[i] = stringify(select(i, ...))
-  end
-
-  local ok, formatted = pcall(string.format, stringify(message), unpack(args))
-  return ok and formatted or stringify(message)
-end
-
----@param level integer
----@param tag string
----@param message string
-local function emit(level, tag, message)
-  local line = string.format("[%s] %s", tag, message)
-  local sink
-
-  if level >= levels.ERROR and type(wezterm.log_error) == "function" then
-    sink = wezterm.log_error
-  elseif level >= levels.WARN and type(wezterm.log_warn) == "function" then
-    sink = wezterm.log_warn
-  elseif type(wezterm.log_info) == "function" then
-    sink = wezterm.log_info
-  end
-
-  if sink then
-    sink(line)
-  end
-end
-
+---log.wz when it is installed; nil otherwise.
 ---@param tag string
 ---@param cfg Chord.LogConfig
 ---@return table|nil
@@ -98,7 +42,6 @@ local function external_logger(tag, cfg)
   if not log or type(log.new) ~= "function" then
     return nil
   end
-
   -- Never call log.setup here: its config is shared by every plugin.
   local ok, logger = pcall(log.new, tag, cfg.enabled ~= false)
   if ok and logger and type(logger.log) == "function" then
@@ -130,42 +73,35 @@ function M:write(level, message, ...)
   if not self.enabled or level < self.threshold then
     return nil
   end
-
-  local formatted = format_message(message, ...)
+  local text = stringify(message)
+  local n = select("#", ...)
+  if n > 0 then
+    local args = { ... }
+    for i = 1, n do
+      args[i] = stringify(args[i])
+    end
+    local ok, formatted = pcall(string.format, text, table.unpack(args, 1, n))
+    text = ok and formatted or text
+  end
   if self._external then
-    self._external:log(level_names[level] or level, formatted)
-  else
-    emit(level, self.tag, formatted)
+    -- As an argument, so a `%` in the text is never read as a format.
+    self._external:log(level_names[level] or level, "%s", text)
+    return nil
+  end
+  -- WezTerm has no debug log; debug goes to info.
+  local sink = level >= levels.ERROR and "log_error"
+    or level >= levels.WARN and "log_warn"
+    or "log_info"
+  if type(wezterm[sink]) == "function" then
+    wezterm[sink](("[%s] %s"):format(self.tag, text))
   end
   return nil
 end
 
----@param message any
----@param ... any
----@return nil
-function M:debug(message, ...)
-  return self:write(levels.DEBUG, message, ...)
-end
-
----@param message any
----@param ... any
----@return nil
-function M:info(message, ...)
-  return self:write(levels.INFO, message, ...)
-end
-
----@param message any
----@param ... any
----@return nil
-function M:warn(message, ...)
-  return self:write(levels.WARN, message, ...)
-end
-
----@param message any
----@param ... any
----@return nil
-function M:error(message, ...)
-  return self:write(levels.ERROR, message, ...)
+for name, level in pairs(levels) do
+  M[name:lower()] = function(self, message, ...)
+    return self:write(level, message, ...)
+  end
 end
 
 return M

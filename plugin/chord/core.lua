@@ -478,73 +478,14 @@ local function parse_spec(spec)
   return rhs, spec[2]
 end
 
+---Apply a `{ disable, override, add }` spec to a key list. `native` lists hold
+---WezTerm entries (`{ key, mods, action }`), so new entries are normalized;
+---otherwise new entries stay in the vim-style `{ lhs, rhs, desc }` shape.
 ---@param entries table[]
 ---@param spec table|nil
+---@param native boolean
 ---@return table[]
-local function apply_wez_entries(entries, spec)
-  local out = {}
-  for i = 1, #(entries or {}) do
-    out[#out + 1] = shallow_copy(entries[i])
-  end
-
-  local disabled = {}
-  for _, lhs in ipairs(spec and spec.disable or {}) do
-    local normalized = normalize_entry_ref(lhs)
-    if normalized then
-      disabled[normalized] = true
-    end
-  end
-
-  if next(disabled) then
-    local filtered = {}
-    for i = 1, #out do
-      local lhs = M.__entry_lhs(out[i])
-      if not disabled[lhs] then
-        filtered[#filtered + 1] = out[i]
-      end
-    end
-    out = filtered
-  end
-
-  local by_lhs = {}
-  for i = 1, #out do
-    by_lhs[M.__entry_lhs(out[i])] = i
-  end
-
-  for lhs, value in pairs(spec and spec.override or {}) do
-    local normalized = normalize_entry_ref(lhs)
-    local rhs, desc = parse_spec(value)
-    if normalized and rhs ~= nil then
-      local idx = by_lhs[normalized]
-      if idx then
-        out[idx].action = rhs
-        if desc ~= nil then
-          out[idx].desc = desc
-        end
-      else
-        local entry = M.key(lhs, rhs, desc)
-        if entry then
-          out[#out + 1] = entry
-          by_lhs[normalized] = #out
-        end
-      end
-    end
-  end
-
-  for _, mapping in ipairs(spec and spec.add or {}) do
-    local entry = M.key(mapping)
-    if entry then
-      out[#out + 1] = entry
-    end
-  end
-
-  return out
-end
-
----@param entries table[]
----@param spec table|nil
----@return table[]
-local function apply_raw_entries(entries, spec)
+local function apply_entries(entries, spec, native)
   local out = {}
   for i = 1, #(entries or {}) do
     out[#out + 1] = shallow_copy(entries[i])
@@ -582,29 +523,43 @@ local function apply_raw_entries(entries, spec)
     local rhs, desc = parse_spec(value)
     if normalized and rhs ~= nil then
       local idx = by_lhs[normalized]
-      if idx then
-        local current = out[idx]
-        if is_native_entry(current) then
-          current.action = rhs
-          if desc ~= nil then
-            current.desc = desc
-          end
-        else
-          current[1] = lhs
-          current[2] = rhs
-          if desc ~= nil then
-            current[3] = desc
-          end
+      local current = idx and out[idx]
+      if current and is_native_entry(current) then
+        current.action = rhs
+        if desc ~= nil then
+          current.desc = desc
+        end
+      elseif current then
+        current[1] = lhs
+        current[2] = rhs
+        if desc ~= nil then
+          current[3] = desc
         end
       else
-        out[#out + 1] = { lhs, rhs, desc }
-        by_lhs[normalized] = #out
+        local entry
+        if native then
+          entry = M.key(lhs, rhs, desc)
+        else
+          entry = { lhs, rhs, desc }
+        end
+        if entry then
+          out[#out + 1] = entry
+          by_lhs[normalized] = #out
+        end
       end
     end
   end
 
   for _, mapping in ipairs(spec and spec.add or {}) do
-    out[#out + 1] = shallow_copy(mapping)
+    local entry
+    if native then
+      entry = M.key(mapping)
+    else
+      entry = shallow_copy(mapping)
+    end
+    if entry then
+      out[#out + 1] = entry
+    end
   end
 
   return out
@@ -623,7 +578,7 @@ function M.apply_overrides(config_table, overrides)
   if enabled.keys == false then
     config_table.keys = {}
   else
-    config_table.keys = apply_wez_entries(config_table.keys or {}, overrides.keys or {})
+    config_table.keys = apply_entries(config_table.keys or {}, overrides.keys or {}, true)
   end
 
   if enabled.key_tables == false then
@@ -640,7 +595,7 @@ function M.apply_overrides(config_table, overrides)
           M._defs[name] = nil
         else
           local existing = config_table.key_tables[name] or {}
-          config_table.key_tables[name] = apply_wez_entries(existing, spec)
+          config_table.key_tables[name] = apply_entries(existing, spec, true)
 
           local def = M._defs[name]
           if def then
@@ -652,7 +607,7 @@ function M.apply_overrides(config_table, overrides)
 
               local next_resolved = {
                 meta = resolved.meta,
-                keys = apply_raw_entries(resolved.keys or {}, spec),
+                keys = apply_entries(resolved.keys or {}, spec, false),
               }
               if next_resolved.meta then
                 next_resolved.meta.name = name
@@ -993,8 +948,13 @@ local function current_page(entries, width_cols, window, name)
   end
   local page = (type(stored) == "number") and stored or 1
   page = math.max(1, math.min(page, total))
-  cache.set(var_key, page, { force = true })
-  cache.set("total_" .. var_key, total, { force = true })
+  -- Every redraw lands here: write GLOBAL only when something changed.
+  if page ~= stored then
+    cache.set(var_key, page, { force = true })
+  end
+  if cache.get("total_" .. var_key) ~= total then
+    cache.set("total_" .. var_key, total, { force = true })
+  end
 
   if total == 0 then
     return nil, "", 0
