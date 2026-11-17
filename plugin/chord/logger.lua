@@ -99,16 +99,11 @@ local function external_logger(tag, cfg)
     return nil
   end
 
-  if type(log.setup) == "function" then
-    pcall(log.setup, {
-      enabled = cfg.enabled ~= false,
-      threshold = cfg.threshold or "warn",
-      sinks = { default_enabled = true },
-    })
-  end
-
+  -- Never call log.setup here: its config is shared by every plugin.
   local ok, logger = pcall(log.new, tag, cfg.enabled ~= false)
   if ok and logger and type(logger.log) == "function" then
+    -- chord filters in M:write; log.wz must not filter again at its own level.
+    logger.threshold = resolve_threshold(cfg.threshold)
     return logger
   end
   return nil

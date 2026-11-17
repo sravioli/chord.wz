@@ -54,7 +54,7 @@ describe("chord logger", function()
     end
 
     function external.new(tag, enabled)
-      return {
+      external.made = {
         log = function(_, level, message)
           events[#events + 1] = {
             tag = tag,
@@ -64,6 +64,7 @@ describe("chord logger", function()
           }
         end,
       }
+      return external.made
     end
 
     package.loaded["log.api"] = external
@@ -73,11 +74,9 @@ describe("chord logger", function()
     logger:debug("debug %s", "message")
     logger:warn("warn %s", "message")
 
-    assert.same({
-      enabled = true,
-      threshold = "debug",
-      sinks = { default_enabled = true },
-    }, setups[1])
+    -- log.wz's config is shared by every plugin: chord must never set it.
+    assert.same({}, setups)
+    assert.equal(0, external.made.threshold)
     assert.same({
       { tag = "External", enabled = true, level = "debug", message = "debug message" },
       { tag = "External", enabled = true, level = "warn", message = "warn message" },
