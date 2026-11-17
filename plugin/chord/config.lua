@@ -199,7 +199,7 @@ local defaults = {
 ---@param base table
 ---@param override table|nil
 ---@return table
-local function merge(base, override)
+function M.merge(base, override)
   return tbl.merge("force", tbl.deepcopy(base or {}), tbl.deepcopy(override or {}))
 end
 
@@ -208,7 +208,7 @@ local current = tbl.deepcopy(defaults)
 ---@param opts? table
 ---@return Chord.Config
 function M.setup(opts)
-  current = merge(defaults, opts)
+  current = M.merge(defaults, opts)
   return current
 end
 

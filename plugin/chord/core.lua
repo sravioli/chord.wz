@@ -3,7 +3,6 @@
 local Logger = require "chord.logger"
 local config = require "chord.config"
 local deps = require "chord.deps"
-local tbl = deps.warp().table
 local wezterm = require "wezterm" --[[@as Wezterm]]
 
 local sgsub, ssub, smatch, sformat = string.gsub, string.sub, string.match, string.format
@@ -53,14 +52,9 @@ local log
 local hint_page_cache = {}
 
 ---@param s string
----@param pattern string
 ---@return string[]
-local function split(s, pattern)
-  local out = {}
-  for part in tostring(s):gmatch("([^" .. pattern .. "]+)") do
-    out[#out + 1] = part
-  end
-  return out
+local function split(s)
+  return deps.warp().string.split(s, "-", { plain = true, skipempty = true })
 end
 
 ---Split `C-S-x` into modifiers and key. A trailing `-` is the minus key,
@@ -72,11 +66,11 @@ local function split_keys(s)
     return { "-" }
   end
   if s:sub(-2) == "--" then
-    local keys = split(s:sub(1, -3), "%-")
+    local keys = split(s:sub(1, -3))
     keys[#keys + 1] = "-"
     return keys
   end
-  return split(s, "%-")
+  return split(s)
 end
 
 ---@return nil
@@ -168,15 +162,7 @@ function M.config()
   return config.get()
 end
 
----@param value any
----@return table
-local function shallow_copy(value)
-  if type(value) ~= "table" then
-    return {}
-  end
-
-  return tbl.copy(value)
-end
+local shallow_copy = require("chord.command_options").shallow_copy
 
 ---@param value any
 ---@return boolean

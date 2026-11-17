@@ -146,7 +146,16 @@ local function warp_merge(_, dst, ...)
   return dst
 end
 
+-- warp.string is the real sibling module, loaded on first use (it requires this mock).
+-- selene: allow(incorrect_standard_library_use)
+package.path = "../warp.wz/plugin/?.lua;" .. package.path
+
 local warp = {
+  string = setmetatable({}, {
+    __index = function(_, key)
+      return require("warp.string")[key]
+    end,
+  }),
   table = {
     copy = warp_copy,
     deepcopy = warp_deepcopy,

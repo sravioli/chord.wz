@@ -31,12 +31,7 @@ function M.clone(value)
   return tbl.deepcopy(value)
 end
 
----@param base table
----@param override table|nil
----@return table
-function M.merge(base, override)
-  return tbl.merge("force", tbl.deepcopy(base or {}), tbl.deepcopy(override or {}))
-end
+M.merge = config.merge
 
 ---@param value any
 ---@return table
