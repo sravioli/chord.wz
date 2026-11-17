@@ -24,6 +24,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Checkout sibling plugins
+        run: |
+          while read -r name ref; do
+            git init -q "../$name.wz"
+            git -C "../$name.wz" fetch -q --depth 1 "https://github.com/sravioli/$name.wz" "$ref"
+            git -C "../$name.wz" checkout -q FETCH_HEAD
+          done <<'EOF'
+          warp main
+          EOF
+
       - name: Install Lua
         uses: leafo/gh-actions-lua@v13
         with:

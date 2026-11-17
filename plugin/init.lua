@@ -1,3 +1,7 @@
+---@module "chord"
+---@author sravioli
+---@license GNU-GPLv2
+
 ---@class Wezterm
 local wezterm = require "wezterm" --[[@as Wezterm]]
 local module_name = ...
@@ -30,13 +34,11 @@ local function bootstrap(refresh)
         base .. "?.lua",
         base .. "?" .. sep .. "init.lua",
       }
-
       for _, entry in ipairs(entries) do
         if not package.path:find(entry, 1, true) then
           package.path = package.path .. ";" .. entry
         end
       end
-
       return p
     end
   end

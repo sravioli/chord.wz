@@ -73,6 +73,13 @@ You need:
    local chord = require "chord.api"
    ```
 
+   Specs load warp.wz from a sibling checkout,
+   so clone it next to this repository:
+
+   ```sh
+   git clone https://github.com/sravioli/warp.wz ../warp.wz
+   ```
+
 4. Run the checks to make sure that the setup works:
 
    ```sh
