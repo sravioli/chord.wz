@@ -51,4 +51,11 @@ describe("chord normalization", function()
       }
     )
   end)
+
+  it("reads a trailing dash as the minus key", function()
+    assert.same({ key = "-", mods = "CTRL" }, chord.normalize "<C-->")
+    assert.same({ key = "-", mods = "CTRL|SHIFT" }, chord.normalize "<C-S-->")
+    assert.same({ key = "-" }, chord.normalize "<->")
+    assert.same({ key = "-", mods = "CTRL" }, chord.normalize "<C-minus>")
+  end)
 end)

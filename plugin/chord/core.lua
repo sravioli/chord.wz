@@ -63,6 +63,22 @@ local function split(s, pattern)
   return out
 end
 
+---Split `C-S-x` into modifiers and key. A trailing `-` is the minus key,
+---so `C--` is { "C", "-" } rather than { "C" }.
+---@param s string
+---@return string[]
+local function split_keys(s)
+  if s == "-" then
+    return { "-" }
+  end
+  if s:sub(-2) == "--" then
+    local keys = split(s:sub(1, -3), "%-")
+    keys[#keys + 1] = "-"
+    return keys
+  end
+  return split(s, "%-")
+end
+
 ---@return nil
 local function clear_caches()
   M._hint_entries_cache = nil
@@ -207,7 +223,7 @@ function M.validate(lhs)
   local normalized = sgsub(test_lhs, "(%b<>)", function(s)
     return ssub(s, 2, -2)
   end)
-  local keys = split(normalized, "%-")
+  local keys = split_keys(normalized)
   if #keys == 1 then
     return true
   end
@@ -249,7 +265,7 @@ function M.normalize(lhs)
   lhs = sgsub(lhs, "(%b<>)", function(s)
     return ssub(s, 2, -2)
   end)
-  local keys = split(lhs, "%-")
+  local keys = split_keys(lhs)
   if #keys == 1 then
     return {
       key = M.aliases[keys[1]] or keys[1],
@@ -864,6 +880,25 @@ local function matches_signature(signature, entries)
   return signature[index] == nil
 end
 
+---Page keys live in wezterm.GLOBAL per pane, and WezTerm has no pane-closed
+---event. Drop keys of panes that are gone; called only when a new key appears.
+---@param cache table memo.cache
+local function prune_closed_panes(cache)
+  local get_pane = wezterm.mux and wezterm.mux.get_pane
+  if type(get_pane) ~= "function" then
+    return
+  end
+  local prefix = config.get().hints.page_cache_prefix or "chord_hint_page"
+  for _, key in ipairs(cache.keys { prefix = prefix }) do
+    local id = tonumber(key:match "_p(%d+)_")
+    local ok, pane = pcall(get_pane, id)
+    if id and not (ok and pane) then
+      cache.delete(key)
+      cache.delete("total_" .. key)
+    end
+  end
+end
+
 ---@param raw {lhs:string, desc:string}[]
 ---@param budget number
 ---@param separator string
@@ -953,6 +988,9 @@ local function current_page(entries, width_cols, window, name)
   local active_pane = window:active_pane()
   local var_key = M.__hint_var(window:window_id(), active_pane:pane_id(), name)
   local stored = cache.get(var_key)
+  if stored == nil then
+    prune_closed_panes(cache)
+  end
   local page = (type(stored) == "number") and stored or 1
   page = math.max(1, math.min(page, total))
   cache.set(var_key, page, { force = true })

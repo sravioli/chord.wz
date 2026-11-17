@@ -21,6 +21,19 @@ local memo = {
         memo_store[key] = value
       end
     end,
+    delete = function(key)
+      memo_store[key] = nil
+    end,
+    keys = function(selector)
+      local prefix = selector and selector.prefix or ""
+      local out = {}
+      for key in pairs(memo_store) do
+        if key:sub(1, #prefix) == prefix then
+          out[#out + 1] = key
+        end
+      end
+      return out
+    end,
     clear = function()
       for key in pairs(memo_store) do
         memo_store[key] = nil

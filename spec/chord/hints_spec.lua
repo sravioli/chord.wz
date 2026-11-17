@@ -393,6 +393,26 @@ describe("chord hints", function()
         assert.equal(1, memo.cache.get(chord.__hint_var(10, 21, "mode")))
         assert.equal(2, memo.cache.get(chord.__hint_var(10, 20, "mode")))
       end)
+
+      it("drops page keys of closed panes when a new pane appears", function()
+        local win = window()
+        local config = paginated_config()
+        local memo = wezterm.plugin.require "https://github.com/sravioli/memo.wz"
+        local closed = chord.__hint_var(10, 99, "mode")
+        memo.cache.set(closed, 2, { force = true })
+        memo.cache.set("total_" .. closed, 3, { force = true })
+        local saved = wezterm.mux
+        wezterm.mux = {
+          get_pane = function(id)
+            return id ~= 99 and {} or nil
+          end,
+        }
+        render_hints(config, 12, win, "mode")
+        wezterm.mux = saved
+        assert.is_nil(memo.cache.get(closed))
+        assert.is_nil(memo.cache.get("total_" .. closed))
+        assert.is_not_nil(memo.cache.get(chord.__hint_var(10, 20, "mode")))
+      end)
     end)
   end
 end)

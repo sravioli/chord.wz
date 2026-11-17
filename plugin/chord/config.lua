@@ -119,6 +119,7 @@ local defaults = {
     k8 = "Numpad8",
     k9 = "Numpad9",
     lt = "<",
+    minus = "-",
     gt = ">",
     PageUp = "PageUp",
     PageDown = "PageDown",
