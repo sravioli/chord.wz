@@ -317,13 +317,16 @@ return function(core)
     return commands
   end
 
-  ---Return a WezTerm action that opens the command picker.
+  ---Shared by the command picker and the help overlay: they differ only in
+  ---their options and labels.
   ---@param config_table table
-  ---@param opts? Chord.CommandOptions
+  ---@param opts? table
+  ---@param merge fun(opts?: table): table
+  ---@param choices fun(commands: Chord.Command[], options: table): table[]
   ---@return table
-  function command.action(config_table, opts)
+  function command.__picker(config_table, opts, merge, choices)
     return wezterm.action_callback(function(window, pane)
-      local options = command_options.command(opts)
+      local options = merge(opts)
       local commands = command.collect(config_table, options)
       local by_id = {}
 
@@ -334,7 +337,7 @@ return function(core)
       window:perform_action(
         wezterm.action.InputSelector {
           title = options.title,
-          choices = picker.choices(commands, options),
+          choices = choices(commands, options),
           fuzzy = options.fuzzy,
           description = options.description,
           fuzzy_description = options.fuzzy_description,
@@ -355,22 +358,42 @@ return function(core)
     end)
   end
 
+  ---Bind `options.key` to `action`, marking the entry so pickers skip it.
+  ---@param config_table table
+  ---@param options table
+  ---@param action table
+  ---@param marker string
+  ---@return table
+  function command.__bind(config_table, options, action, marker)
+    config_table.keys = config_table.keys or {}
+    local entry = core.key(options.key, action, options.desc)
+    if entry then
+      entry[marker] = true
+      config_table.keys[#config_table.keys + 1] = entry
+    end
+    return action
+  end
+
+  ---Return a WezTerm action that opens the command picker.
+  ---@param config_table table
+  ---@param opts? Chord.CommandOptions
+  ---@return table
+  function command.action(config_table, opts)
+    return command.__picker(config_table, opts, command_options.command, picker.choices)
+  end
+
   ---Add a trigger binding that opens the command picker.
   ---@param config_table table
   ---@param opts? Chord.CommandOptions
   ---@return table
   function command.apply(config_table, opts)
     local options = command_options.command(opts)
-    local action = command.action(config_table, options)
-
-    config_table.keys = config_table.keys or {}
-    local entry = core.key(options.key, action, options.desc)
-    if entry then
-      entry.__chord_command_picker = true
-      config_table.keys[#config_table.keys + 1] = entry
-    end
-
-    return action
+    return command.__bind(
+      config_table,
+      options,
+      command.action(config_table, options),
+      "__chord_command_picker"
+    )
   end
 
   ---Build WezTerm command-palette entries from Chord commands.
