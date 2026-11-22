@@ -149,6 +149,10 @@ end
 -- warp.string is the real sibling module, loaded on first use (it requires this mock).
 -- selene: allow(incorrect_standard_library_use)
 package.path = "../warp.wz/plugin/?.lua;" .. package.path
+-- Specs use the warp stand-in below, never the sibling's real warp.api.
+package.preload["warp.api"] = function()
+  error "warp.api is replaced by the spec stand-in"
+end
 
 local warp = {
   string = setmetatable({}, {
@@ -162,6 +166,7 @@ local warp = {
     merge = warp_merge,
   },
 }
+warp.ribbon = ribbon
 
 wezterm.plugin = {
   list = function()
@@ -175,9 +180,6 @@ wezterm.plugin = {
   require = function(url)
     if url:find("memo.wz", 1, true) then
       return memo
-    end
-    if url:find("ribbon.wz", 1, true) then
-      return ribbon
     end
     if url:find("warp.wz", 1, true) then
       return warp

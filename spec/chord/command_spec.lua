@@ -351,13 +351,9 @@ describe("chord command picker", function()
   end)
 
   it("falls back from ribbon picker labels to wezterm.format", function()
-    local original_require = wezterm.plugin.require
-    wezterm.plugin.require = function(url)
-      if tostring(url):find("ribbon.wz", 1, true) then
-        error "missing ribbon"
-      end
-      return original_require(url)
-    end
+    local warp = require("chord.deps").warp()
+    local original_ribbon = warp.ribbon
+    warp.ribbon = nil
 
     local config = {}
     chord.maps(config, {
@@ -374,7 +370,7 @@ describe("chord command picker", function()
 
     action.callback(win, pane)
 
-    wezterm.plugin.require = original_require
+    warp.ribbon = original_ribbon
 
     local selector = calls[1].action
     assert.equal("[keys] a  alpha", selector.args.choices[1].label)

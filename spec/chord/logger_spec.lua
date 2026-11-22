@@ -5,7 +5,7 @@ local wezterm = require "wezterm"
 describe("chord logger", function()
   before_each(function()
     deps._cache = {}
-    package.loaded["log.api"] = nil
+    package.loaded["warp.api"] = nil
     wezterm._logs = {}
   end)
 
@@ -44,7 +44,7 @@ describe("chord logger", function()
     assert.same({ level = "error", message = "[Numeric] visible" }, wezterm._logs[1])
   end)
 
-  it("uses log.wz when the optional logger is available", function()
+  it("uses warp.log when the optional logger is available", function()
     local events = {}
     local setups = {}
     local external = {}
@@ -55,7 +55,7 @@ describe("chord logger", function()
 
     function external.new(tag, enabled)
       external.made = {
-        -- Formats its arguments like log.wz's Log:log.
+        -- Formats its arguments like warp.log's Log:log.
         log = function(_, level, message, ...)
           events[#events + 1] = {
             tag = tag,
@@ -68,14 +68,14 @@ describe("chord logger", function()
       return external.made
     end
 
-    package.loaded["log.api"] = external
-    deps._cache.log = nil
+    package.loaded["warp.api"] = { log = external }
+    deps._cache.warp = nil
 
     local logger = Logger.new("External", { threshold = "debug" })
     logger:debug("debug %s", "message")
     logger:warn("warn %s", "message")
 
-    -- log.wz's config is shared by every plugin: chord must never set it.
+    -- warp.log's config is shared by every plugin: chord must never set it.
     assert.same({}, setups)
     assert.equal(0, external.made.threshold)
     assert.same({

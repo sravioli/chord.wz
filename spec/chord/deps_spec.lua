@@ -4,9 +4,7 @@ local wezterm = require "wezterm"
 describe("chord dependencies", function()
   after_each(function()
     deps._cache = {}
-    package.loaded["log.api"] = nil
     package.loaded["memo.api"] = nil
-    package.loaded["ribbon.api"] = nil
   end)
 
   it("prefers local api modules before plugin URLs", function()
@@ -23,9 +21,9 @@ describe("chord dependencies", function()
     wezterm.plugin.require = function()
       error "missing dependency"
     end
-    deps._cache.ribbon = nil
+    deps._cache.memo = nil
 
-    local ok, err = pcall(deps.ribbon)
+    local ok, err = pcall(deps.memo)
 
     wezterm.plugin.require = original_require
 
@@ -38,9 +36,9 @@ describe("chord dependencies", function()
     wezterm.plugin.require = function()
       error "missing dependency"
     end
-    deps._cache.ribbon = nil
+    deps._cache.memo = nil
 
-    local plugin, err = deps.optional "ribbon"
+    local plugin, err = deps.optional "memo"
 
     wezterm.plugin.require = original_require
 

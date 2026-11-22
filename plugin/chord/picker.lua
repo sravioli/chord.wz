@@ -157,7 +157,8 @@ end
 ---@param color table|nil
 ---@return string
 local function format_with_ribbon(badge, label, color)
-  local ribbon, err = deps.optional "ribbon"
+  local warp, err = deps.optional "warp"
+  local ribbon = warp and warp.ribbon
   if not ribbon then
     if not warned_ribbon then
       warned_ribbon = true

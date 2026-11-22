@@ -12,17 +12,9 @@ local M = {
 
 ---@type table<string, Chord.Dependency>
 M.plugins = {
-  log = {
-    module = "log.api",
-    url = "https://github.com/sravioli/log.wz",
-  },
   memo = {
     module = "memo.api",
     url = "https://github.com/sravioli/memo.wz",
-  },
-  ribbon = {
-    module = "ribbon.api",
-    url = "https://github.com/sravioli/ribbon.wz",
   },
   warp = {
     module = "warp.api",
@@ -74,16 +66,6 @@ end
 ---@return table
 function M.memo()
   return require_dependency "memo"
-end
-
----@return table
-function M.log()
-  return require_dependency "log"
-end
-
----@return table
-function M.ribbon()
-  return require_dependency "ribbon"
 end
 
 ---@return table

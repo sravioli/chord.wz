@@ -33,19 +33,20 @@ local function stringify(value)
   return ok and type(rendered) == "string" and rendered or tostring(value)
 end
 
----log.wz when it is installed; nil otherwise.
+---warp.log when it is installed; nil otherwise.
 ---@param tag string
 ---@param cfg Chord.LogConfig
 ---@return table|nil
 local function external_logger(tag, cfg)
-  local log = deps.optional "log"
+  local warp = deps.optional "warp"
+  local log = warp and warp.log
   if not log or type(log.new) ~= "function" then
     return nil
   end
   -- Never call log.setup here: its config is shared by every plugin.
   local ok, logger = pcall(log.new, tag, cfg.enabled ~= false)
   if ok and logger and type(logger.log) == "function" then
-    -- chord filters in M:write; log.wz must not filter again at its own level.
+    -- chord filters in M:write; warp.log must not filter again at its own level.
     logger.threshold = resolve_threshold(cfg.threshold)
     return logger
   end

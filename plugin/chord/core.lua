@@ -1072,7 +1072,7 @@ end
 ---@return table
 function M.hint_layout(config_table, name, width_cols, window, opts)
   width_cols = math.max(0, math.floor(width_cols))
-  local ribbon = deps.ribbon()
+  local ribbon = deps.warp().ribbon
   local theme = opts.theme
   local mode_bg = tostring(opts.mode_bg)
   local bg = tostring(theme.tab_bar.background)
