@@ -2,6 +2,29 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [1.3.1](https://github.com/sravioli/chord.wz/compare/893a38ed64fc6a3f0e272e9f6e5e27fffec62578..1.3.1) - 2026-11-22
+#### Bug Fixes
+- (**core**) bind the minus key and prune hint pages of closed panes - ([65f9e7c](https://github.com/sravioli/chord.wz/commit/65f9e7c5750a251641de398305caf7aeb5dd0c7c)) - sravioli
+- (**logger**) stop calling log.setup - ([65240fd](https://github.com/sravioli/chord.wz/commit/65240fdf7869ce07b987d86da0e5da33e11dd4b0)) - sravioli
+#### Documentation
+- add a showcase of the pickers with the scripts that take the screenshots - ([b1be2fa](https://github.com/sravioli/chord.wz/commit/b1be2fa81239ab8d5f48ec3875e534e9ff8dc112)) - sravioli
+- add minit.lua for reproducing bugs - ([7d6c1f1](https://github.com/sravioli/chord.wz/commit/7d6c1f1fca1ea292c8ceb68e80276694dddc8253)) - sravioli
+#### Continuous Integration
+- pass the release tag to the shell through env - ([33fcb66](https://github.com/sravioli/chord.wz/commit/33fcb663f72ea8f18de7381d5c0a7a8c358aa2c2)) - sravioli
+- release from the pushed tag - ([6baccf4](https://github.com/sravioli/chord.wz/commit/6baccf4a42d70bdc538dcb543f8971a0826bdf43)) - sravioli
+- count only the plugin's own files in coverage - ([81d5499](https://github.com/sravioli/chord.wz/commit/81d549914eff76d7c8a5e87eda2ee93c4b1f651b)) - sravioli
+- fix lint and formatting of the screenshot scripts - ([c100ed0](https://github.com/sravioli/chord.wz/commit/c100ed0eadb6fae480d4750f6d8d6fa37b10507b)) - sravioli
+- bump cocogitto/cocogitto-action from 3.11 to 4 in the actions group across 1 directory (#5) - ([9de878f](https://github.com/sravioli/chord.wz/commit/9de878f2217e4bbc5ad347c2f4db5cc187499bc7)) - [@sravioli](https://github.com/sravioli)
+- adapt workflows to cocogitto-action v4 - ([5ee2660](https://github.com/sravioli/chord.wz/commit/5ee26608a3f320618a9183681b3a5eedc2ad180f)) - sravioli
+- bump cocogitto/cocogitto-action - ([893a38e](https://github.com/sravioli/chord.wz/commit/893a38ed64fc6a3f0e272e9f6e5e27fffec62578)) - dependabot[bot]
+#### Refactoring
+- (**overlay**) reuse the command picker - ([0ad6b01](https://github.com/sravioli/chord.wz/commit/0ad6b01bc2ca6ea61c5ffef0a17b5f5060228582)) - sravioli
+- load log and ribbon from warp - ([d863189](https://github.com/sravioli/chord.wz/commit/d863189823aef6f5f39628012d20987449e80a93)) - sravioli
+- share merge and shallow_copy, split keys with warp - ([6a20c74](https://github.com/sravioli/chord.wz/commit/6a20c746b540e83510de624fb015915750321423)) - sravioli
+- merge override paths, shrink logger, skip redundant hint writes - ([ccf6ae7](https://github.com/sravioli/chord.wz/commit/ccf6ae797d1f96d0ec327350bbf6102e3668cc5b)) - sravioli
+
+- - -
+
 ## [1.3.0](https://github.com/sravioli/chord.wz/compare/a71d54032294f103256c5b63991eb46b9a2183b7..1.3.0) - 2026-11-16
 #### Features
 - (**mosaic**) add the chord mode and hints modules - ([0dc94e8](https://github.com/sravioli/chord.wz/commit/0dc94e87d04ebfb6593dab7b327ffd831ac87ac8)) - sravioli
